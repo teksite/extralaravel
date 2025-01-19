@@ -61,7 +61,7 @@ if (!function_exists('currentUrlWithoutQueries')) {
         return env('APP_URL') . parse_url(url()->current(), PHP_URL_PATH);
     }
 }
-if (!function_exists('currentUrlWithoutQueries')) {
+if (!function_exists('exploding')) {
     function exploding(?string $string): ?\Illuminate\Support\Collection
     {
         if ($string === null) return null;
