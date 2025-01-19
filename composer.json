@@ -1,0 +1,36 @@
+{
+    "name": "teksite/extralaravel",
+    "description": "this package add some features such as rules, middlewares, functions to laravel",
+    "authors": [
+        {
+            "name": "Sina Zangiband",
+            "email": "sina.zangiband@gmail.com"
+        }
+    ],
+    "version": "0.0.1",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Teksite\\Extralaravel\\": "src/"
+        }
+    },
+    "require": {
+        "php": "^8.2",
+        "illuminate/support": "~11.0"
+    },
+    "autoload-dev": {
+        "files": [
+            "./Modules/Main/app/Helper/function.php"
+
+        ],
+        "psr-4": {
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Teksite\\Extralaravel\\ExtraLaravelServiceProvider"
+            ]
+        }
+    }
+}
