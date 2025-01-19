@@ -22,10 +22,7 @@ class LogicMakeCommand extends GeneratorCommand
 
     protected function getPath($name)
     {
-        $module = $this->option('module');
-        $baseDir = $module
-            ? base_path("Modules/{$module}/app/Logics")
-            : base_path('app/Logics');
+        $baseDir =  base_path('app/Logics');
 
         $relativePath = Str::replaceFirst($baseDir, '', $name);
         $absolutePath=base_path($relativePath);
@@ -43,9 +40,7 @@ class LogicMakeCommand extends GeneratorCommand
         $name = ltrim($name, '\\/');
 
         $module = $this->option('module');
-        $namespace = $module
-            ? "Modules\\{$module}\\Logics"
-            : $this->rootNamespace() . 'Logics';
+        $namespace =  $this->rootNamespace() . 'Logics';
         return $namespace . '\\' . str_replace('/', '\\', $name);
     }
 
@@ -53,7 +48,7 @@ class LogicMakeCommand extends GeneratorCommand
     protected function getOptions()
     {
         return [
-            ['module', 'M', InputOption::VALUE_OPTIONAL, 'The module to create the request in.'],
+//            ['module', 'M', InputOption::VALUE_OPTIONAL, 'The module to create the request in.'],
         ];
     }
 }

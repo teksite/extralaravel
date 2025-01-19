@@ -22,10 +22,7 @@ class SoftDeleteControllerMakeCommand extends GeneratorCommand
 
     protected function getPath($name)
     {
-        $module = $this->option('module');
-        $baseDir = $module
-            ? base_path("Modules/{$module}/app/Http/Controllers")
-            : base_path('app/Http/Controllers');
+        $baseDir =  base_path('app/Http/Controllers');
 
         $relativePath = Str::replaceFirst($baseDir, '', $name);
         $absolutePath=base_path($relativePath);
@@ -42,10 +39,7 @@ class SoftDeleteControllerMakeCommand extends GeneratorCommand
     {
         $name = ltrim($name, '\\/');
 
-        $module = $this->option('module');
-        $namespace = $module
-            ? "Modules\\{$module}\\Http\\Controllers"
-            : $this->rootNamespace() . 'Http\\Controllers';
+        $namespace =  $this->rootNamespace() . 'Http\\Controllers';
         return $namespace . '\\' . str_replace('/', '\\', $name);
     }
 
@@ -53,7 +47,7 @@ class SoftDeleteControllerMakeCommand extends GeneratorCommand
     protected function getOptions()
     {
         return [
-            ['module', 'M', InputOption::VALUE_OPTIONAL, 'The module to create the request in.'],
+//            ['module', 'M', InputOption::VALUE_OPTIONAL, 'The module to create the request in.'],
         ];
     }
 }

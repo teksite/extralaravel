@@ -25,6 +25,7 @@ class ExtraLaravelServiceProvider extends ServiceProvider
         $this->bootTranslations();
 
     }
+
     public function registerConfig(): void
     {
         $mobilePatternPath = config_path('mobile-pattern.php'); // Path to the published file
@@ -34,7 +35,7 @@ class ExtraLaravelServiceProvider extends ServiceProvider
             file_exists($mobilePatternPath) ? $mobilePatternPath : __DIR__ . '/config/mobile-pattern.php', 'mobile-pattern');
         $this->mergeConfigFrom(
             file_exists($passwordPatternPath) ? $passwordPatternPath : __DIR__ . '/config/password-pattern.php', 'password-pattern');
-}
+    }
     public function bootCommands(): void
     {
         $this->commands([
