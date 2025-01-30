@@ -78,9 +78,9 @@ class ExtraLaravelServiceProvider extends ServiceProvider
     }
     public function bootTranslations(): void
     {
-        $langPath = __DIR__.'/lang/';
-
+        $langPath = __DIR__.'/lang';
         if (is_dir($langPath)) {
+
             $this->loadTranslationsFrom($langPath, 'extra');
             $this->loadJsonTranslationsFrom($langPath);
         }
