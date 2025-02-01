@@ -61,6 +61,8 @@ if (!function_exists('currentUrlWithoutQueries')) {
         return env('APP_URL') . parse_url(url()->current(), PHP_URL_PATH);
     }
 }
+
+
 if (!function_exists('exploding')) {
     function exploding(?string $string): ?\Illuminate\Support\Collection
     {
@@ -70,3 +72,30 @@ if (!function_exists('exploding')) {
             ->map(fn($item) => trim($item));
     }
 }
+
+if (!function_exists('exploding')) {
+    function exploding(?string $string): ?\Illuminate\Support\Collection
+    {
+        if ($string === null) return null;
+        return collect(explode(',', $string))
+            ->flatMap(fn($item) => explode('،', trim($item)))
+            ->map(fn($item) => trim($item));
+    }
+}
+
+if (!function_exists('var_export_short')) {
+    function var_export_short($expression,bool $return=false) {
+
+        $export = var_export($expression, true);
+        $patterns = [
+            "/array \(/" => '[',
+            "/^([ ]*)\)(,?)$/m" => '$1]$2',
+            "/=>[ ]?\n[ ]+\[/" => '=> [',
+            "/([ ]*)(\'[^\']+\') => ([\[\'])/" => '$1$2 => $3',
+        ];
+        $export = preg_replace(array_keys($patterns), array_values($patterns), $export);
+
+        if ((bool)$return) return $export; else echo $export;
+    }
+}
+

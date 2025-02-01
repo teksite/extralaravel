@@ -12,20 +12,17 @@
     "autoload": {
         "psr-4": {
             "Teksite\\Extralaravel\\": "src/"
-        }
+        },
+        "files": [
+            "./src/helper.php"
+        ]
+
     },
     "require": {
         "php": "^8.2",
         "illuminate/support": "~11.0"
     },
-    "autoload-dev": {
-        "files": [
-            "./Modules/Main/app/Helper/function.php"
 
-        ],
-        "psr-4": {
-        }
-    },
     "extra": {
         "laravel": {
             "providers": [
