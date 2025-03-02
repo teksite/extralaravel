@@ -22,14 +22,12 @@ class ExtraLaravelServiceProvider extends ServiceProvider
         $this->bootCommands();;
         $this->publish();
         $this->bootTrashResource();
-        $this->bootTranslations();
-
     }
 
     public function registerConfig(): void
     {
-        $mobilePatternPath = config_path('mobile-pattern.php'); // Path to the published file
-        $passwordPatternPath = config_path('password-pattern.php'); // Path to the published file
+        $mobilePatternPath = config_path('mobile-pattern.php');
+        $passwordPatternPath = config_path('password-pattern.php');
 
         $this->mergeConfigFrom(
             file_exists($mobilePatternPath) ? $mobilePatternPath : __DIR__ . '/config/mobile-pattern.php', 'mobile-pattern');
@@ -48,6 +46,9 @@ class ExtraLaravelServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__ . '/config/password-pattern.php' => config_path('password-pattern.php')
         ], 'password-pattern');
+        $this->publishes([
+            __DIR__ . '/config/mobile-pattern.php' => config_path('mobile-pattern.php')
+        ], 'mobile-pattern');
 
     }
     public function bootTrashResource(): void
@@ -75,14 +76,5 @@ class ExtraLaravelServiceProvider extends ServiceProvider
                 }
             });
         });
-    }
-    public function bootTranslations(): void
-    {
-        $langPath = __DIR__.'/lang';
-        if (is_dir($langPath)) {
-
-            $this->loadTranslationsFrom($langPath, 'extra');
-            $this->loadJsonTranslationsFrom($langPath);
-        }
     }
 }

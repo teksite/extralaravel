@@ -1,12 +1,13 @@
 <?php
 
-/*
- * Convert string to slug
- */
-
 use Illuminate\Support\Str;
 
 if (!function_exists('changeToSlug')) {
+    /**
+     * @param string $slug
+     * @param string $separator
+     * @return \Illuminate\Support\Stringable
+     */
     function changeToSlug(string $slug, string $separator = '-'): \Illuminate\Support\Stringable
     {
         $slug = preg_replace_callback('/[A-Z]/', function ($matches) {
@@ -25,6 +26,10 @@ if (!function_exists('changeToSlug')) {
 
 }
 if (!function_exists('toEnglishNumber')) {
+    /**
+     * @param string $string
+     * @return string
+     */
     function toEnglishNumber(string $string): string
     {
         $persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
@@ -36,6 +41,11 @@ if (!function_exists('toEnglishNumber')) {
     }
 }
 if (!function_exists('convertSeconds')) {
+    /**
+     * @param int|null $seconds
+     * @param string|null $format
+     * @return string|array
+     */
     function convertSeconds(?int $seconds = null, ?string $format = 'string'): string|array
     {
         if ($seconds === null) return "00:00:00";
@@ -56,6 +66,9 @@ if (!function_exists('convertSeconds')) {
     }
 }
 if (!function_exists('currentUrlWithoutQueries')) {
+    /**
+     * @return string
+     */
     function currentUrlWithoutQueries(): string
     {
         return env('APP_URL') . parse_url(url()->current(), PHP_URL_PATH);
@@ -64,6 +77,10 @@ if (!function_exists('currentUrlWithoutQueries')) {
 
 
 if (!function_exists('exploding')) {
+    /**
+     * @param string|null $string
+     * @return \Illuminate\Support\Collection|null
+     */
     function exploding(?string $string): ?\Illuminate\Support\Collection
     {
         if ($string === null) return null;
@@ -74,6 +91,10 @@ if (!function_exists('exploding')) {
 }
 
 if (!function_exists('exploding')) {
+    /**
+     * @param string|null $string
+     * @return \Illuminate\Support\Collection|null
+     */
     function exploding(?string $string): ?\Illuminate\Support\Collection
     {
         if ($string === null) return null;
@@ -84,7 +105,12 @@ if (!function_exists('exploding')) {
 }
 
 if (!function_exists('var_export_short')) {
-    function var_export_short($expression,bool $return=false) {
+    /**
+     * @param $expression
+     * @param bool $return
+     * @return array|string|string[]|void|null
+     */
+    function var_export_short($expression, bool $return=false) {
 
         $export = var_export($expression, true);
         $patterns = [
@@ -99,3 +125,28 @@ if (!function_exists('var_export_short')) {
     }
 }
 
+if (!function_exists('arrayToDot')) {
+    /**
+     * @param string $name
+     * @return string|null
+     */
+    function arrayToDot(string $name): ?string
+    {
+        return str_contains($name, '[')
+            ? preg_replace(['/\[|\]/', '/\]\[/'], ['', '.'], $name)
+            : $name;
+    }
+}
+
+if (!function_exists('dotToArray')) {
+    /**
+     * @param string $name
+     * @return string|null
+     */
+    function dotToArray(string $name): ?string
+    {
+        return str_contains($name, '.')
+            ? preg_replace('/\./', '][', $name) . ']'
+            : $name;
+    }
+}

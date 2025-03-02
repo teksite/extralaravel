@@ -14,6 +14,6 @@ class IpCast implements CastsAttributes
 
     public function set(Model $model, string $key, mixed $value, array $attributes): mixed
     {
-        return request()->ip();
+        return $value ?? request()->ip();
     }
 }

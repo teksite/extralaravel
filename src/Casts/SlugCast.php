@@ -17,7 +17,6 @@ class SlugCast implements CastsAttributes
     public function get(Model $model, string $key, mixed $value, array $attributes): mixed
     {
         if (request()->ajax() && !is_null($this->routeName)){
-
             return  route($this->routeName, $value) ;
         }
         return  $value ;
