@@ -7,6 +7,7 @@ use Illuminate\Support\ServiceProvider;
 
 use Illuminate\Support\Facades\Validator;
 use Teksite\Extralaravel\Console\ApiRequestMakeCommand;
+use Teksite\Extralaravel\Console\LogicMakeCommand;
 use Teksite\Extralaravel\Console\SoftDeleteControllerMakeCommand;
 
 class ExtraLaravelServiceProvider extends ServiceProvider
@@ -38,7 +39,8 @@ class ExtraLaravelServiceProvider extends ServiceProvider
     {
         $this->commands([
             ApiRequestMakeCommand::class,
-            SoftDeleteControllerMakeCommand::class
+            SoftDeleteControllerMakeCommand::class,
+            LogicMakeCommand::class
         ]);
     }
     public function publish(): void
