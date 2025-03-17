@@ -90,20 +90,6 @@ if (!function_exists('exploding')) {
     }
 }
 
-if (!function_exists('exploding')) {
-    /**
-     * @param string|null $string
-     * @return \Illuminate\Support\Collection|null
-     */
-    function exploding(?string $string): ?\Illuminate\Support\Collection
-    {
-        if ($string === null) return null;
-        return collect(explode(',', $string))
-            ->flatMap(fn($item) => explode('،', trim($item)))
-            ->map(fn($item) => trim($item));
-    }
-}
-
 if (!function_exists('var_export_short')) {
     /**
      * @param $expression
