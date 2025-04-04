@@ -96,7 +96,8 @@ if (!function_exists('var_export_short')) {
      * @param bool $return
      * @return array|string|string[]|void|null
      */
-    function var_export_short($expression, bool $return=false) {
+    function var_export_short($expression, bool $return = false)
+    {
 
         $export = var_export($expression, true);
         $patterns = [
@@ -119,7 +120,7 @@ if (!function_exists('arrayToDot')) {
     function arrayToDot(string $name): ?string
     {
         return str_contains($name, '[')
-            ? preg_replace(['/\[|\]/', '/\]\[/'], ['', '.'], $name)
+            ? preg_replace(['/\[/', '/\]/'], ['.' ,''], $name)
             : $name;
     }
 }
@@ -151,3 +152,44 @@ if (!function_exists('normalizePath')) {
         return rtrim($normalizedPath, DIRECTORY_SEPARATOR);
     }
 }
+
+if (!function_exists('is_rtl')) {
+    /**
+     * Determines if a given language uses right-to-left (RTL) script.
+     *
+     * @param string|null $language Language code to check (optional)
+     * @return bool True if the language is RTL, false otherwise
+     */
+    function is_rtl(?string $language = null): bool
+    {
+        $rtlLanguages = [
+            'ar' => 'Arabic',   // Arabic - عربی
+            'fa' => 'Persian',  // Persian - فارسی
+            'he' => 'Hebrew',   // Hebrew - عبری
+            'ur' => 'Urdu',     // Urdu - اردو
+            'ps' => 'Pashto',   // Pashto - پشتو
+            'ku' => 'Kurdish',  // Kurdish - کردی
+            'sd' => 'Sindhi',   // Sindhi - سندی
+            'yi' => 'Yiddish',  // Yiddish - ییدیش
+        ];
+
+        $languageCodes = array_keys($rtlLanguages);
+
+        if ($language === null) {
+            return in_array(app()->getLocale(), $languageCodes);
+        }
+
+        return in_array($language, $languageCodes);
+    }
+}
+
+
+if (!function_exists('get_error')) {
+
+    function get_error($errors ,string $name)
+    {
+        $stringifiedName=arrayToDot($name);
+        return $errors->get($stringifiedName);
+    }
+}
+
