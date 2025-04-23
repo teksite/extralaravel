@@ -42,6 +42,8 @@ if (!function_exists('toEnglishNumber')) {
 }
 if (!function_exists('convertSeconds')) {
     /**
+     * convert second to hour-minute-second
+     * format parameter can be array to return arrays of values carbon format
      * @param int|null $seconds
      * @param string|null $format
      * @return string|array
