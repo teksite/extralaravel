@@ -121,9 +121,11 @@ if (!function_exists('arrayToDot')) {
      */
     function arrayToDot(string $name): ?string
     {
-        return str_contains($name, '[')
+        $dottedName= str_contains($name, '[')
             ? preg_replace(['/\[/', '/\]/'], ['.' ,''], $name)
             : $name;
+        return trim($dottedName ,'.');
+
     }
 }
 
