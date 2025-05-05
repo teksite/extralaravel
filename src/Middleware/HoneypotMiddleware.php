@@ -10,7 +10,8 @@ class HoneypotMiddleware
 
     public function handle(Request $request, Closure $next)
     {
-        if ($request->has('data_info.fullname') && !empty($request->input('data_info.fullname'))) {
+        $honeyField=config('extralaravel.honeypot.field_name' ?? 'data_info.fullname');
+        if ($request->has($honeyField) && !empty($request->input($honeyField))) {
             // Block the request if the honeypot field is not empty.
             return response('Forbidden', 403);
         }
