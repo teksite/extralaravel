@@ -197,7 +197,7 @@ if (!function_exists('get_error')) {
     }
 }
 
-if (!function_exists('getData')) {
+if (!function_exists('getStaticData')) {
     /**
      * Retrieve data from a specified path using dot notation, similar to Laravel's config().
      *
@@ -206,7 +206,7 @@ if (!function_exists('getData')) {
      * @param string $pre_path Optional prefix path to prepend to the key
      * @return mixed
      */
-    function getData(string $key, mixed $default = null, string $pre_path = ''): mixed
+    function getStaticData(string $key, mixed $default = null, string $pre_path = ''): mixed
     {
 
         // Normalize pre_path to dot notation
