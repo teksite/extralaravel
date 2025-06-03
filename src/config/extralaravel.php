@@ -10,5 +10,6 @@ return [
    */
   'honeypot'=>[
       'field_name'=>'data_info.fullname'
-  ]
+  ],
+    'get_Data_path'=>'/app/data'
 ];

@@ -9,6 +9,8 @@
     ],
     "minimum-stability": "dev",
     "license": "MIT",
+    "version": "0.1.1",
+
     "autoload": {
         "psr-4": {
             "Teksite\\Extralaravel\\": "src/"

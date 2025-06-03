@@ -197,3 +197,69 @@ if (!function_exists('get_error')) {
     }
 }
 
+if (!function_exists('getData')) {
+    /**
+     * Retrieve data from a specified path using dot notation, similar to Laravel's config().
+     *
+     * @param string $key Dot notation key (e.g., 'app.data.times.iran.tehran')
+     * @param mixed|null $default Default value if key or file is not found
+     * @param string $pre_path Optional prefix path to prepend to the key
+     * @return mixed
+     */
+    function getData(string $key, mixed $default = null, string $pre_path = ''): mixed
+    {
+
+        // Normalize pre_path to dot notation
+        $pre_path = trim(str_replace(['/', '\\'], '.', $pre_path), '.');
+        $notedPath = $pre_path ? $pre_path . '.' . $key : $key;
+
+        // Generate cache key
+        $cacheKey = 'data_' . str_replace('.', '_', $notedPath);
+
+        // Use cache to avoid repeated file loading
+        return cache()->remember($cacheKey, now()->addHour(), function () use ($notedPath, $default) {
+            // Split key into segments
+            $segments = explode('.', trim($notedPath, '.'));
+
+            // Prevent empty key
+            if (empty($segments)) {
+                return $default;
+            }
+
+            // Find the file path
+            $fileSegments = [];
+            $arrayKeys = [];
+            $filePath = '';
+
+            foreach ($segments as $index => $segment) {
+                $fileSegments[] = $segment;
+                $potentialPath = base_path(implode(DIRECTORY_SEPARATOR, $fileSegments) . '.php');
+
+                if (file_exists($potentialPath)) {
+                    $filePath = $potentialPath;
+                    $arrayKeys = array_slice($segments, $index + 1);
+                    break;
+                }
+            }
+
+            // Return default if no valid file is found
+            if (!$filePath) {
+                return $default;
+            }
+
+            // Load the data file
+            $data = include $filePath;
+
+            // Navigate through nested array
+            foreach ($arrayKeys as $key) {
+                if (is_array($data) && array_key_exists($key, $data)) {
+                    $data = $data[$key];
+                } else {
+                    return $default;
+                }
+            }
+
+            return $data;
+        });
+    }
+}
