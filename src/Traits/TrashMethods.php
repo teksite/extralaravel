@@ -2,7 +2,6 @@
 
 namespace Teksite\Extralaravel\Traits;
 
-use Lareon\Modules\Blog\App\Models\Annotation;
 use Teksite\Handler\Actions\ServiceResult;
 use Teksite\Handler\Actions\ServiceWrapper;
 use Illuminate\Database\Eloquent\Builder;
@@ -16,7 +15,7 @@ trait TrashMethods
      *
      * @var string|null
      */
-    private static $modelClass = null;
+    private static ?string $modelClass = null;
 
     /**
      * Get the model class name - must be implemented by the using class

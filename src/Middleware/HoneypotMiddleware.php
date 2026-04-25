@@ -10,7 +10,7 @@ class HoneypotMiddleware
 
     public function handle(Request $request, Closure $next)
     {
-        $honeyField=config('extralaravel.honeypot.field_name' ?? 'formpot');
+        $honeyField=config('extralaravel.honeypot.field_name' ?? 'honeypot');
         if($request->input($honeyField)) abort(403);
 
         return $next($request);

@@ -9,7 +9,7 @@ return [
     | use it to prevent form submission if it's empty
     */
     'honeypot'      => [
-        'field_name' => 'data_info.fullname',
+        'field_name' => env('HONEYPOT_FIELD_NAME', 'honeypot'),
     ],
     'get_Data_path' => '/app/data',
 ];
