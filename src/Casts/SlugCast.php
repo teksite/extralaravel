@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class SlugCast implements CastsAttributes
 {
-    protected $slugs=[];
+    protected array $slugs=[];
 
     public function __construct(public ?string $routeName =null , ...$slugs)
     {
