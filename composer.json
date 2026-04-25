@@ -20,7 +20,8 @@
     },
     "require": {
         "php": "^8.3",
-        "laravel/framework": "^13.0"
+        "laravel/framework": "^13.0",
+        "morilog/jalali": "^3.5"
     },
     "extra": {
         "laravel": {
