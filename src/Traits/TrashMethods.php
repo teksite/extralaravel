@@ -2,11 +2,9 @@
 
 namespace Teksite\Extralaravel\Traits;
 
-use Teksite\Handler\Actions\ServiceResult;
-use Teksite\Handler\Actions\ServiceWrapper;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Teksite\Handler\Services\FetchDataService;
 
 trait TrashMethods
 {
@@ -29,9 +27,7 @@ trait TrashMethods
      */
     private function initializeModelClass(): void
     {
-        if (self::$modelClass === null) {
-            self::$modelClass = $this->getModelClass();
-        }
+        if (self::$modelClass === null) self::$modelClass = $this->getModelClass();
     }
 
     /**
@@ -40,116 +36,113 @@ trait TrashMethods
     private function trashedQuery(): Builder
     {
         $this->initializeModelClass();
+
         return self::$modelClass::onlyTrashed();
     }
 
     /**
      * Count all trashed records
+     *
+     * @return int
      */
-    public function trashCount()
+    public function trashCount(): int
     {
-        return app(ServiceWrapper::class)(fn () => $this->trashedQuery()->count());
+        return $this->trashedQuery()->count();
     }
-
     /**
-     * Get paginated trashed records
+     * @param int|null $perPage
+     * @param string|string[] $columns
+     * @param string $pageName
+     * @param int|null $page
+     * @param \Closure|int|null $total
+     * @return LengthAwarePaginator
      */
-    public function getTrashes(int $perPage = 25 ,mixed $fetchData=[])
+    public function getTrashes(int|null $perPage = 25, array|string $columns = ['*'], string $pageName = 'page', null|int $page = null, \Closure|int|null $total = null): LengthAwarePaginator
     {
-        return app(ServiceWrapper::class)(function () use ($fetchData, $perPage) {
-                return app(FetchDataService::class)($this->trashedQuery() ,['title'] ,...$fetchData);
-        });
+        return $this->trashedQuery()->paginate($perPage, $columns, $pageName, $page, $total);
     }
-
     /**
      * Restore one or multiple records
+     *
+     * @param int|array|null $id
+     * @return mixed
      */
-    public function restore(int|array|null $id = null): ServiceResult
+    public function restore(int|array|null $id = null): mixed
     {
         $ids = $this->normalizeIds($id);
-        if (!empty($ids)) {
-           return app(ServiceWrapper::class)(fn () => $this->trashedQuery()->whereIn('id', $ids)->restore());
-        }
-        return new ServiceResult(false ,null);
+
+        return $this->trashedQuery()->whereIn('id', $ids)->restore();
     }
 
+
     /**
-     * Restore a single record
+     *  Restore a single record
+     *
+     * @param int $id
+     * @return bool
      */
-    public function restoreOne(int $id): ServiceResult
+    public function restoreOne(int $id): bool
     {
         return $this->restore($id);
     }
 
+
     /**
      * Restore all trashed records
+     *
+     * @return bool
      */
-    public function restoreAll(): ServiceResult
+    public function restoreAll(): bool
     {
-       return  app(ServiceWrapper::class)(fn () => $this->trashedQuery()->restore());
+        return $this->trashedQuery()->restore();
     }
+
 
     /**
-     * Permanently delete records with their relationships
+     *  Permanently delete records with their relationships
+     *
+     * @param int|array $id
+     * @return mixed
      */
-    public function wipe(int|array $id): ServiceResult
+    public function wipe(int|array $id): mixed
     {
         $ids = $this->normalizeIds($id);
-        if (!empty($ids)) {
-           return app(ServiceWrapper::class)(function () use ($ids) {
-                $query = $this->trashedQuery()->whereIn('id', $ids);
-                $this->deleteRelationships($query);
-                $query->forceDelete();
-            });
-        }
-        return new ServiceResult(false ,null);
 
+        return $this->trashedQuery()->whereIn('id', $ids)->forceDelete();
     }
+
 
     /**
      * Permanently delete a single record
+     *
+     * @param int $id
+     * @return mixed
      */
-    public function wipeOne(int $id): ServiceResult
+    public function wipeOne(int $id): mixed
     {
         return $this->wipe($id);
     }
 
     /**
-     * Permanently delete all trashed records
+     * delete all soft deleted items
+     *
+     * @return mixed
      */
-    public function wipeAll(): ServiceResult
+    public function wipeAll():  mixed
     {
-        return app(ServiceWrapper::class)(fn () => $this->trashedQuery()->forceDelete());
+        return $this->trashedQuery()->forceDelete();
     }
 
     /**
      * Normalize ID input to array format
+     *
+     * @param int|array|null $id
+     * @return array|int[]
      */
     private function normalizeIds(int|array|null $id): array
     {
-        if (is_null($id)) {
-            return [];
-        }
+        if (is_null($id)) return [];
         return is_array($id) ? $id : [$id];
     }
 
-    /**
-     * Delete related records based on model relationships
-     */
-    private function deleteRelationships(Builder $query): void
-    {
-        $this->initializeModelClass();
-
-        if (method_exists(self::$modelClass, 'comments')) {
-            $query->with('comments')->each(fn ($item) => $item->comments()->forceDelete());
-        }
-
-        if (method_exists(self::$modelClass, 'tags')) {
-            $query->each(fn ($item) => $item->tags()->detach());
-        }
-
-        if (method_exists(self::$modelClass, 'categories')) {
-            $query->each(fn ($item) => $item->categories()->detach());
-        }
-    }
 }
