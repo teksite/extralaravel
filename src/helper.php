@@ -40,6 +40,27 @@ if (!function_exists('toEnglishNumber')) {
         return str_replace($allPersianDigits, $replaces, $string);
     }
 }
+
+if (!function_exists('arabic_to_persian_letter')) {
+    /**
+     * @param string|null $string
+     * @return string|null
+     */
+    function arabic_to_persian_letter(?string $string): null|string
+    {
+        if ($string === null) return null;
+        $arabic_to_persian_map = [
+            'أ' => 'ا', 'إ' => 'ا', 'آ' => 'آ', 'ا' => 'ا',
+            'ى' => 'ی', 'ي' => 'ی', 'ی' => 'ی',
+            'ة' => 'ه',
+            'ؤ' => 'و', 'ئ' => 'ی', 'ء' => 'ء',
+            'َ' => '', 'ً' => '', 'ُ' => '', 'ٌ' => '', 'ِ' => '', 'ٍ' => '', 'ْ' => '', 'ّ' => '',
+        ];
+        $string = preg_replace('/[\x{064B}-\x{0652}]/u', '', $string);
+        $string = strtr($string, $arabic_to_persian_map);
+        return $string;
+    }
+}
 if (!function_exists('convertSeconds')) {
     /**
      * convert second to hour-minute-second
@@ -58,7 +79,7 @@ if (!function_exists('convertSeconds')) {
 
         if ($format === 'array') {
             return [
-                'hours' => (int)$hours,
+                'hours'   => (int)$hours,
                 'minutes' => (int)$minutes,
                 'seconds' => (int)$sec,
             ];
@@ -103,9 +124,9 @@ if (!function_exists('var_export_short')) {
 
         $export = var_export($expression, true);
         $patterns = [
-            "/array \(/" => '[',
-            "/^([ ]*)\)(,?)$/m" => '$1]$2',
-            "/=>[ ]?\n[ ]+\[/" => '=> [',
+            "/array \(/"                       => '[',
+            "/^([ ]*)\)(,?)$/m"                => '$1]$2',
+            "/=>[ ]?\n[ ]+\[/"                 => '=> [',
             "/([ ]*)(\'[^\']+\') => ([\[\'])/" => '$1$2 => $3',
         ];
         $export = preg_replace(array_keys($patterns), array_values($patterns), $export);
@@ -121,10 +142,10 @@ if (!function_exists('arrayToDot')) {
      */
     function arrayToDot(string $name): ?string
     {
-        $dottedName= str_contains($name, '[')
-            ? preg_replace(['/\[/', '/\]/'], ['.' ,''], $name)
+        $dottedName = str_contains($name, '[')
+            ? preg_replace(['/\[/', '/\]/'], ['.', ''], $name)
             : $name;
-        return trim($dottedName ,'.');
+        return trim($dottedName, '.');
 
     }
 }
@@ -190,9 +211,9 @@ if (!function_exists('is_rtl')) {
 
 if (!function_exists('get_error')) {
 
-    function get_error($errors ,string $name)
+    function get_error($errors, string $name)
     {
-        $stringifiedName=arrayToDot($name);
+        $stringifiedName = arrayToDot($name);
         return $errors->get($stringifiedName);
     }
 }

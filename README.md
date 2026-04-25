@@ -10,10 +10,11 @@ A powerful Laravel package that enhances your application with additional middle
 - Installation
 - Features
     - Middleware
-    - Configuration Files
+    - Enums Files
     - Custom Casts
     - Artisan Commands
     - Validation Rules
+    - etc.
 - Support
 
 ## About
@@ -82,22 +83,16 @@ Enhance your application's security with the included honeypot middleware:
 
 Add it to your `app/Http/Kernel.php` under the `$middleware` or `$routeMiddleware` array as needed.
 
-### Configuration Files
+### Enum Files
 
-The package provides configuration files for various settings, such as:
+The package provides Enum files for various purposes, such as:
 
-- **Area**: Geographic regions
-- **Lang**: Language settings
-- **Currency**: Currency formats
-- **Local-lang**: Localized language settings
-- **Mobile-pattern**: Mobile number formats
+- **Areas**: Geographic regions
+- **Langs**: Language settings
+- **Currencies**: Currency formats
+- **LocalLangs**: Localized language settings
+- **MobilePatterns**: Mobile number formats
 
-Access these configurations using:
-
-```php
-config('extralaravel.currency');
-config('extralaravel.education');
-```
 
 ### Custom Casts
 
@@ -105,13 +100,13 @@ Simplify data handling with custom casts:
 
 ```php
 use Teksite\Extralaravel\Casts\SlugCast;
-use Teksite\Extralaravel\Casts\JsonCast;
 use Teksite\Extralaravel\Casts\IpCast;
+use Teksite\Extralaravel\Casts\DateCast;
 
 protected $casts = [
-    'slug' => SlugCast::class,
-    'data' => JsonCast::class,
-    'ip_address' => IpCast::class,
+    'slugColumn' => SlugCast::class,
+    'dateColumn'=> DateCast::class
+    'ip_addressColumn' => IpCast::class,
 ];
 ```
 
@@ -154,7 +149,7 @@ The package includes custom validation rules tailored for specific use cases:
   ```php
   use Teksite\Extralaravel\Rules\MobileRule;
   
-  'mobile' => ['required', new MobileRule],
+  'mobile' => ['required', new MobileRule(\Teksite\Extralaravel\Enums\MobilePatterns::iran)],
   ```
 
 - **Never Pass Rule**: Useful for testing or blocking specific inputs.

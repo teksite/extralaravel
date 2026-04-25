@@ -7,8 +7,6 @@ use Illuminate\Contracts\Validation\ValidationRule;
 
 class NoHtmlRule implements ValidationRule
 {
-
-
     /**
      * Run the validation rule.
      *
