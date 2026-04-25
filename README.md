@@ -26,8 +26,11 @@ Developed by **Sina Zangiband**.
 
 ## Contact
 
-- Website: teksite.net
-- Email: support@teksite.net
+- Website:
+  - [teksite.net](https://teksite.net)
+  - [laratek.net](https://laratek.net)
+- 
+- Email: [support@teksite.net](mailto:support@teksite.net)
 
 ## Installation
 
@@ -41,7 +44,7 @@ composer require teksite/extralaravel
 
 ### Step 2: Register the Service Provider
 
-#### For Laravel 10 and 11
+#### For Laravel > 9
 
 Add the service provider to the `bootstrap/providers.php` file:
 
