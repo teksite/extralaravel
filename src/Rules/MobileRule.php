@@ -5,49 +5,63 @@ namespace Teksite\Extralaravel\Rules;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Support\Str;
+use Illuminate\Translation\PotentiallyTranslatedString;
+use InvalidArgumentException;
+use Teksite\Extralaravel\Enums\MobilePatterns;
 
 class MobileRule implements ValidationRule
 {
-    private array|string $country;
+    private array $patterns = [];
 
-    public function __construct(string|array $country = 'iran')
+    /**
+     * @param MobilePatterns|MobilePatterns[] $country
+     */
+    public function __construct(private readonly MobilePatterns|array $country = MobilePatterns::iran)
     {
-        $this->country = $country;
+        $this->patterns = $this->preparePatterns($this->$country);
     }
 
     /**
      * Run the validation rule.
      *
-     * @param \Closure(string, ?string=): \Illuminate\Translation\PotentiallyTranslatedString $fail
+     * @param Closure(string, ?string=): PotentiallyTranslatedString $fail
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        $patterns = $this->getPatterns()['patterns'];
-        $countries = $this->getPatterns()['countries'];
-
-        if (count($patterns) < 1 && count($countries)) abort(505, 'error in validation of countries');
-        $validation = false;
-        foreach ($patterns as $pattern) {
-            if (preg_match($pattern, $value)) {
-                $validation = true;
-                break;
+        foreach ($this->patterns as $pattern) {
+            if (preg_match($pattern->value, $value)) {
+                return;
             }
         }
-        if (!$validation) {
-            $fail(__("the phone number is not matched with :country ", ['country' => implode(", ", $countries)]));
-        }
+
+        $countryNames = implode(', ', array_map(fn($pattern) => $pattern->name, $this->patterns));
+        $fail(__('the :attribute is note matched with :countries patterns ', ['attribute' => $attribute, 'countries' => $countryNames]));
     }
 
-    private function getPatterns()
-    {
-        $countriesToValidate = is_string($this->country) ? [$this->country] : $this->country;
-        $patterns = [];
-        foreach ($countriesToValidate as $country) {
-            $patterns['patterns'][] = config('mobile-pattern')[strtolower($country)];
-            $patterns['countries'][] = strtoupper($country);
-        }
-        return $patterns;
 
+    /**
+     * @param MobilePatterns|MobilePatterns[]|string[]|string $countryInput
+     * @return MobilePatterns[]
+     */
+    private function preparePatterns(MobilePatterns|array|string $countryInput): array
+    {
+        $patterns = [];
+        $countries = is_string($countryInput) ? [$countryInput] : (is_array($countryInput) ? $countryInput : [$countryInput]);
+
+        foreach ($countries as $item) {
+            $pattern = $item instanceof MobilePatterns ? $item : MobilePatterns::tryFrom($item);
+
+            if ($pattern === null) {
+                throw new InvalidArgumentException(trans(':attribute can not be recognized or is not matched with MobilePatterns enum', ['attribute' => $item]));
+            }
+
+            $patterns[] = $pattern;
+        }
+        $filteredPatterns = array_values(array_unique($patterns, SORT_REGULAR));
+        if (empty($filteredPatterns)) {
+            throw new InvalidArgumentException(trans('the patterns are not valid'));
+        }
+        return $filteredPatterns;
     }
 
 

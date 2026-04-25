@@ -125,10 +125,9 @@ class ExtraLaravelServiceProvider extends ServiceProvider
     private function registerRecursiveBladeDirectives(): void
     {
         Blade::directive('recursive', function ($expression) {
-            // جدا کردن آرایه و متغیر آیتم از expression
+
             [$array, $item] = array_map('trim', explode(',', str_replace(['(', ')'], '', $expression)));
 
-            // اگر آرایه به صورت مستقیم پاس داده شده (مثل (array) $messages)
             if (str_contains($array, '(array)')) {
                 $array = str_replace('(array)', '', $array);
                 $arraySource = "(array) \${$array}";

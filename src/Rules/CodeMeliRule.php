@@ -21,7 +21,11 @@ class CodeMeliRule implements ValidationRule
         }
     }
 
-    private function isValidIranianNationalCode($code)
+    /**
+     * @param $code
+     * @return bool
+     */
+    private function isValidIranianNationalCode($code): bool
     {
         if (!preg_match('/^\d{10}$/', $code)) return false;
 

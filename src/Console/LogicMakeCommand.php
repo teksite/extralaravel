@@ -30,7 +30,6 @@ class LogicMakeCommand extends GeneratorCommand
     }
 
     /**
-     * تنظیمات نام‌گذاری کلاس.
      *
      * @param string $name
      * @return string
