@@ -14,18 +14,20 @@ class SoftDeleteControllerMakeCommand extends GeneratorCommand
 
     protected $description = 'Create a new controller for soft deleted entities.';
 
-    protected function getStub()
+    protected function getStub(): string
     {
-        return __DIR__.'/../stubs/trash-resource-controller.stub';
+        return __DIR__ . '/../stubs/' . ($this->option('api')
+                ? 'trash-resource-controller-api.stub'
+                :'trash-resource-controller.stub');
     }
 
 
     protected function getPath($name)
     {
-        $baseDir =  base_path('app/Http/Controllers');
+        $baseDir = base_path('app/Http/Controllers');
 
         $relativePath = Str::replaceFirst($baseDir, '', $name);
-        $absolutePath=base_path($relativePath);
+        $absolutePath = base_path($relativePath);
         return str_replace('\\', '/', $absolutePath) . '.php';
     }
 
@@ -38,15 +40,15 @@ class SoftDeleteControllerMakeCommand extends GeneratorCommand
     {
         $name = ltrim($name, '\\/');
 
-        $namespace =  $this->rootNamespace() . 'Http\\Controllers';
+        $namespace = $this->rootNamespace() . 'Http\\Controllers';
         return $namespace . '\\' . str_replace('/', '\\', $name);
     }
 
 
-    protected function getOptions()
+    protected function getOptions(): array
     {
         return [
-//            ['module', 'M', InputOption::VALUE_OPTIONAL, 'The module to create the request in.'],
+            ['api', null, InputOption::VALUE_NONE, 'api trash resource controller.'],
         ];
     }
 }

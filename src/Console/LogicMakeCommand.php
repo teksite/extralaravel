@@ -38,7 +38,6 @@ class LogicMakeCommand extends GeneratorCommand
     {
         $name = ltrim($name, '\\/');
 
-        $module = $this->option('module');
         $namespace =  $this->rootNamespace() . 'Logics';
         return $namespace . '\\' . str_replace('/', '\\', $name);
     }
