@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\App;
 
 class DateCast implements CastsAttributes
 {
-    private string $lang = 'fa';
 
     public function __construct()
     {
@@ -17,13 +16,13 @@ class DateCast implements CastsAttributes
 
     public function get(Model $model, string $key, mixed $value, array $attributes): mixed
     {
-        if ($this->lang === 'fa') return dateToJalali($value);
+        if ($this->lang === 'fa' && function_exists('dateToJalali')) return dateToJalali($value);
         return $value;
     }
 
     public function set(Model $model, string $key, mixed $value, array $attributes): mixed
     {
-        if ($this->lang === 'fa' && $value) return dateToGregorian($value);
+        if ($this->lang === 'fa' && $value && function_exists('dateToGregorian')) return dateToGregorian($value);
         return $value ?? now();
 
     }

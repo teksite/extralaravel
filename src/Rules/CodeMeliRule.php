@@ -27,6 +27,8 @@ class CodeMeliRule implements ValidationRule
      */
     private function isValidIranianNationalCode($code): bool
     {
+        $code = (string) $code;
+
         if (!preg_match('/^\d{10}$/', $code)) return false;
 
         $digits = str_split($code);
