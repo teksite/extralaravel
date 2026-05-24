@@ -16,7 +16,7 @@ class MobileRule implements ValidationRule
     /**
      * @param MobilePatterns|MobilePatterns[] $country
      */
-    public function __construct(private readonly MobilePatterns|array $country = MobilePatterns::iran)
+    public function __construct(private readonly MobilePatterns|array $country = MobilePatterns::IRAN)
     {
         $this->patterns = $this->preparePatterns($this->$country);
     }
