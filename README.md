@@ -110,6 +110,9 @@ protected $casts = [
 ];
 ```
 
+### Must Verify Phone 
+add `Teksite\Extralaravel\Traits\MustVerifyPhone` trait to User model to support phone as well as email.
+
 ### Artisan Commands
 
 Boost productivity with custom artisan commands:
