@@ -18,7 +18,7 @@ class MobileRule implements ValidationRule
      */
     public function __construct(private readonly MobilePatterns|array $country = MobilePatterns::IRAN)
     {
-        $this->patterns = $this->preparePatterns($this->$country);
+        $this->patterns = $this->preparePatterns($this->country);
     }
 
     /**
@@ -35,32 +35,47 @@ class MobileRule implements ValidationRule
         }
 
         $countryNames = implode(', ', array_map(fn($pattern) => $pattern->name, $this->patterns));
-        $fail(__('the :attribute is note matched with :countries patterns ', ['attribute' => $attribute, 'countries' => $countryNames]));
+        $fail("The {$attribute} does not match mobile patterns for: {$countryNames}");
+
     }
 
-
     /**
+     *
      * @param MobilePatterns|MobilePatterns[]|string[]|string $countryInput
      * @return MobilePatterns[]
+     *
      */
     private function preparePatterns(MobilePatterns|array|string $countryInput): array
     {
         $patterns = [];
-        $countries = is_string($countryInput) ? [$countryInput] : (is_array($countryInput) ? $countryInput : [$countryInput]);
+
+        if ($countryInput instanceof MobilePatterns) {
+            $countries = [$countryInput];
+        } elseif (is_string($countryInput)) {
+            $countries = [$countryInput];
+        } elseif (is_array($countryInput)) {
+            $countries = $countryInput;
+        } else {
+            throw new InvalidArgumentException(trans('Invalid country input type'));
+        }
 
         foreach ($countries as $item) {
             $pattern = $item instanceof MobilePatterns ? $item : MobilePatterns::tryFrom($item);
 
             if ($pattern === null) {
-                throw new InvalidArgumentException(trans(':attribute can not be recognized or is not matched with MobilePatterns enum', ['attribute' => $item]));
+                throw new InvalidArgumentException(
+                    trans(':attribute cannot be recognized or does not match MobilePatterns', ['attribute' => $item])
+                );
             }
-
             $patterns[] = $pattern;
         }
+
         $filteredPatterns = array_values(array_unique($patterns, SORT_REGULAR));
+
         if (empty($filteredPatterns)) {
-            throw new InvalidArgumentException(trans('the patterns are not valid'));
+            throw new InvalidArgumentException(trans('The patterns are not valid'));
         }
+
         return $filteredPatterns;
     }
 
