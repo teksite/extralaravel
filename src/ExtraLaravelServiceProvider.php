@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Teksite\Extralaravel\Console\ApiRequestMakeCommand;
+use Teksite\Extralaravel\Console\PurgeCacheCommand;
 use Teksite\Extralaravel\Console\LogicMakeCommand;
 use Teksite\Extralaravel\Console\SoftDeleteControllerMakeCommand;
 
@@ -53,6 +54,7 @@ class ExtraLaravelServiceProvider extends ServiceProvider
             ApiRequestMakeCommand::class,
             SoftDeleteControllerMakeCommand::class,
             LogicMakeCommand::class,
+            PurgeCacheCommand::class,
         ]);
     }
 
