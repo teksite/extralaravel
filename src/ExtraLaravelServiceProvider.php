@@ -10,6 +10,7 @@ use Teksite\Extralaravel\Console\ApiRequestMakeCommand;
 use Teksite\Extralaravel\Console\PurgeCacheCommand;
 use Teksite\Extralaravel\Console\LogicMakeCommand;
 use Teksite\Extralaravel\Console\SoftDeleteControllerMakeCommand;
+use Teksite\Extralaravel\Console\StorageCustomLink;
 
 class ExtraLaravelServiceProvider extends ServiceProvider
 {
