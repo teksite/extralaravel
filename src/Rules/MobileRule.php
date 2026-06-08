@@ -21,13 +21,8 @@ class MobileRule implements ValidationRule
         $this->countries = $this->prepareCountries($countries);
     }
 
-    public function validate(
-        string  $attribute,
-        mixed   $value,
-        Closure $fail
-    ): void
+    public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-
         if (!is_string($value) || trim($value) === '') {
             $fail(__('validation.mobile'));
             return;
@@ -39,34 +34,18 @@ class MobileRule implements ValidationRule
             }
         }
 
-        $allowedCountries = implode(
-            ', ',
-            array_map(
-                fn(MobilePatterns $country) => $country->label(),
-                $this->countries
-            )
-        );
+        $allowedCountries = implode(', ', array_map(fn(MobilePatterns $country) => $country->label(), $this->countries));
 
-        $fail(
-            __("The :attribute must be a valid mobile number for: :countries", [
-                'attribute' => $attribute,
-                'countries' => $allowedCountries,
-            ])
-        );
+        $fail(__("The :attribute must be a valid mobile number for: :countries", ['attribute' => $attribute, 'countries' => $allowedCountries,]));
     }
 
     /**
      * @return MobilePatterns[]
      */
-    private function prepareCountries(
-        MobilePatterns|array|string $countries
-    ): array
+    private function prepareCountries(MobilePatterns|array|string $countries): array
     {
-
-        if (!is_array($countries)) {
-            $countries = [$countries];
-        }
-
+        if (!is_array($countries)) $countries = [$countries];
+        
         $result = [];
 
         foreach ($countries as $country) {
