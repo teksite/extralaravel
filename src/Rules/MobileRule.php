@@ -11,73 +11,90 @@ use Teksite\Extralaravel\Enums\MobilePatterns;
 
 class MobileRule implements ValidationRule
 {
-    private array $patterns = [];
-
     /**
-     * @param MobilePatterns|MobilePatterns[] $country
+     * @var MobilePatterns[]
      */
-    public function __construct(private readonly MobilePatterns|array $country = MobilePatterns::IRAN)
+    private array $countries;
+
+    public function __construct(MobilePatterns|array|string $countries = MobilePatterns::IRAN)
     {
-        $this->patterns = $this->preparePatterns($this->country);
+        $this->countries = $this->prepareCountries($countries);
     }
 
-    /**
-     * Run the validation rule.
-     *
-     * @param Closure(string, ?string=): PotentiallyTranslatedString $fail
-     */
-    public function validate(string $attribute, mixed $value, Closure $fail): void
+    public function validate(
+        string  $attribute,
+        mixed   $value,
+        Closure $fail
+    ): void
     {
-        foreach ($this->patterns as $pattern) {
-            if (preg_match($pattern->value, $value)) {
+
+        if (!is_string($value) || trim($value) === '') {
+            $fail(__('validation.mobile'));
+            return;
+        }
+
+        foreach ($this->countries as $country) {
+            if ($country->validate($value)) {
                 return;
             }
         }
 
-        $countryNames = implode(', ', array_map(fn($pattern) => $pattern->name, $this->patterns));
-        $fail("The {$attribute} does not match mobile patterns for: {$countryNames}");
+        $allowedCountries = implode(
+            ', ',
+            array_map(
+                fn(MobilePatterns $country) => $country->label(),
+                $this->countries
+            )
+        );
 
+        $fail(
+            __("The :attribute must be a valid mobile number for: :countries", [
+                'attribute' => $attribute,
+                'countries' => $allowedCountries,
+            ])
+        );
     }
 
     /**
-     *
-     * @param MobilePatterns|MobilePatterns[]|string[]|string $countryInput
      * @return MobilePatterns[]
-     *
      */
-    private function preparePatterns(MobilePatterns|array|string $countryInput): array
+    private function prepareCountries(
+        MobilePatterns|array|string $countries
+    ): array
     {
-        $patterns = [];
 
-        if ($countryInput instanceof MobilePatterns) {
-            $countries = [$countryInput];
-        } elseif (is_string($countryInput)) {
-            $countries = [$countryInput];
-        } elseif (is_array($countryInput)) {
-            $countries = $countryInput;
-        } else {
-            throw new InvalidArgumentException(trans('Invalid country input type'));
+        if (!is_array($countries)) {
+            $countries = [$countries];
         }
 
-        foreach ($countries as $item) {
-            $pattern = $item instanceof MobilePatterns ? $item : MobilePatterns::tryFrom($item);
+        $result = [];
 
-            if ($pattern === null) {
+        foreach ($countries as $country) {
+
+            if ($country instanceof MobilePatterns) {
+                $result[] = $country;
+                continue;
+            }
+
+            if (!is_string($country)) {
                 throw new InvalidArgumentException(
-                    trans(':attribute cannot be recognized or does not match MobilePatterns', ['attribute' => $item])
+                    'Invalid country type.'
                 );
             }
-            $patterns[] = $pattern;
+
+            $enum = MobilePatterns::country($country);
+
+            if (!$enum) {
+                throw new InvalidArgumentException(
+                    "Unknown country [{$country}]"
+                );
+            }
+
+            $result[] = $enum;
         }
 
-        $filteredPatterns = array_values(array_unique($patterns, SORT_REGULAR));
-
-        if (empty($filteredPatterns)) {
-            throw new InvalidArgumentException(trans('The patterns are not valid'));
-        }
-
-        return $filteredPatterns;
+        return array_values(
+            array_unique($result, SORT_REGULAR)
+        );
     }
-
-
 }
