@@ -45,7 +45,7 @@ class MobileRule implements ValidationRule
     private function prepareCountries(MobilePatterns|array|string $countries): array
     {
         if (!is_array($countries)) $countries = [$countries];
-        
+
         $result = [];
 
         foreach ($countries as $country) {

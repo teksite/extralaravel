@@ -121,13 +121,26 @@ enum MobilePatterns
         $country = is_string($country) ? self::country($country) : $country;
 
         if (str_starts_with($phone, '+')) {
-            $detected = self::detectCountry($phone);
-            if (!$detected) return null;
-            return ltrim($phone, '+');
-        }
-        if (!$country) return null;
+            $phone = substr($phone, 1);
+            $detected = self::detectCountry('+' . $phone);
 
-        if (!$country->validate($phone)) return null;
+            if (!$detected) return null;
+            return $phone;
+        }
+
+        if (str_starts_with($phone, '00')) {
+            $phone = substr($phone, 2);
+            $detected = self::detectCountry('+' . $phone);
+
+            if (!$detected) return null;
+            return $phone;
+        }
+
+        if (!$country)  return null;
+
+
+        if (!$country->validate($phone))   return null;
+
 
         $phone = ltrim($phone, '0');
 
@@ -140,16 +153,16 @@ enum MobilePatterns
     public function label(): string
     {
         return match ($this) {
-            self::IRAN => 'Iran',
-            self::USA => 'United States',
-            self::CANADA => 'Canada',
+            self::IRAN           => 'Iran',
+            self::USA            => 'United States',
+            self::CANADA         => 'Canada',
             self::UNITED_KINGDOM => 'United Kingdom',
-            self::GERMANY => 'Germany',
-            self::FRANCE => 'France',
-            self::TURKEY => 'Turkey',
-            self::UAE => 'United Arab Emirates',
-            self::INDIA => 'India',
-            self::AUSTRALIA => 'Australia',
+            self::GERMANY        => 'Germany',
+            self::FRANCE         => 'France',
+            self::TURKEY         => 'Turkey',
+            self::UAE            => 'United Arab Emirates',
+            self::INDIA          => 'India',
+            self::AUSTRALIA      => 'Australia',
         };
     }
 }
