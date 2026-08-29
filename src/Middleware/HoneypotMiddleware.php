@@ -14,7 +14,7 @@ class HoneypotMiddleware
         if (!isset($config['enabled']) || $config['enabled'] === false) return $next($request);
 
         $field = $config['field_name'] ?? 'honeypot';
-        $status = $config('status') ?? 403;
+        $status = $config['status'] ?? 403;
 
         if ($request->filled($field)) abort($status);
 
