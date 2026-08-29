@@ -10,9 +10,13 @@ class HoneypotMiddleware
 
     public function handle(Request $request, Closure $next)
     {
-        $field = config('extralaravel.honeypot.field_name', 'honeypot');
+        $config = config('extralaravel.honeypot');
+        if (!isset($config['enabled']) || $config['enabled'] === false) return $next($request);
 
-        if ($request->filled($field)) abort(403);
+        $field = $config['field_name'] ?? 'honeypot';
+        $status = $config('status') ?? 403;
+
+        if ($request->filled($field)) abort($status);
 
         return $next($request);
     }

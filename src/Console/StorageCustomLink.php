@@ -49,7 +49,6 @@ class StorageCustomLink extends Command
                 if ($status === 'skipped') {
                     $this->components->twoColumnDetail("⚠ {$key}", '<fg=green;options=bold>Already exists</>');
                     $skipped++;
-                    $skipped++;
                     continue;
                 }
 
