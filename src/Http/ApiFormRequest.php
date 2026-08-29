@@ -28,7 +28,7 @@ class ApiFormRequest extends FormRequest
     public function failedAuthorization()
     {
         return throw new HttpResponseException(response()->json([
-            'messages' => trans("Forbidden You don't have permission"),
+            'message' => 'Forbidden.',
             'errors' => ['auth'=>"Forbidden You don't have permission"],
             'status' => 403,
             'data' => [],

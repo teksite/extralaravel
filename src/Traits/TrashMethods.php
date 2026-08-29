@@ -2,147 +2,142 @@
 
 namespace Teksite\Extralaravel\Traits;
 
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
+use LogicException;
 
 trait TrashMethods
 {
     /**
-     * Cached model class name
-     *
-     * @var string|null
-     */
-    private static ?string $modelClass = null;
-
-    /**
-     * Get the model class name - must be implemented by the using class
-     *
-     * @return string
+     * Get the model class used by this trash manager.
      */
     abstract protected function getModelClass(): string;
 
-    /**
-     * Initialize and cache the model class name
-     */
-    private function initializeModelClass(): void
-    {
-        if (self::$modelClass === null) self::$modelClass = $this->getModelClass();
-    }
 
     /**
-     * Get the trashed model query builder instance
+     * Get a query builder containing only soft-deleted models.
      */
     private function trashedQuery(): Builder
     {
-        $this->initializeModelClass();
+        $modelClass = $this->getModelClass();
 
-        return self::$modelClass::onlyTrashed();
+        if (!class_exists($modelClass) || !is_a($modelClass, Model::class, true)) {
+            throw new \LogicException("Invalid model [{$modelClass}]. " . "The model must exist and extend " . Model::class . '.');
+        }
+
+        if (!in_array(SoftDeletes::class, class_uses_recursive($modelClass), true)) {
+            throw new LogicException("Model [{$modelClass}] must use the " . SoftDeletes::class . ' trait.');
+        }
+
+        return $modelClass::onlyTrashed();
     }
 
+
     /**
-     * Count all trashed records
+     * Get the model's primary key name.
      *
-     * @return int
+     * This supports models whose primary key is not "id".
+     */
+    private function getModelKeyName(): string
+    {
+        return $this->trashedQuery()->getModel()->getKeyName();
+    }
+
+
+    /**
+     * Count all soft-deleted records.
      */
     public function trashCount(): int
     {
         return $this->trashedQuery()->count();
     }
-    /**
-     * @param int|null $perPage
-     * @param string|string[] $columns
-     * @param string $pageName
-     * @param int|null $page
-     * @param \Closure|int|null $total
-     * @return LengthAwarePaginator
-     */
-    public function getTrashes(int|null $perPage = 25, array|string $columns = ['*'], string $pageName = 'page', null|int $page = null, \Closure|int|null $total = null): LengthAwarePaginator
-    {
-        return $this->trashedQuery()->paginate($perPage, $columns, $pageName, $page, $total);
-    }
-    /**
-     * Restore one or multiple records
-     *
-     * @param int|array|null $id
-     * @return mixed
-     */
-    public function restore(int|array|null $id = null): mixed
-    {
-        $ids = $this->normalizeIds($id);
 
-        return $this->trashedQuery()->whereIn('id', $ids)->restore();
+
+    /**
+     * Get paginated soft-deleted records.
+     */
+    public function getTrashes(?int $perPage = 25, array|string $columns = ['*'], string $pageName = 'page', ?int $page = null, \Closure|int|null $total = null): LengthAwarePaginator
+    {
+        return $this->trashedQuery()->paginate(
+            $perPage,
+            $columns,
+            $pageName,
+            $page,
+            $total
+        );
     }
 
+    /**
+     * Restore one or multiple soft-deleted records.
+     */
+    public function restore(int|string|array $ids): int
+    {
+        $ids = $this->normalizeIds($ids);
+
+        if ($ids === []) return 0;
+
+        return $this->trashedQuery()
+                    ->whereKey($ids)
+                    ->restore();
+    }
+
 
     /**
-     *  Restore a single record
-     *
-     * @param int $id
-     * @return bool
+     * Restore a single soft-deleted record.
      */
-    public function restoreOne(int $id): bool
+    public function restoreOne(int|string $id): int
     {
         return $this->restore($id);
     }
 
 
     /**
-     * Restore all trashed records
-     *
-     * @return bool
+     * Restore all soft-deleted records.
      */
-    public function restoreAll(): bool
+    public function restoreAll(): int
     {
         return $this->trashedQuery()->restore();
     }
 
 
     /**
-     *  Permanently delete records with their relationships
-     *
-     * @param int|array $id
-     * @return mixed
+     * Permanently delete one or multiple soft-deleted records.
      */
-    public function wipe(int|array $id): mixed
+    public function wipe(int|string|array $ids): int
     {
-        $ids = $this->normalizeIds($id);
+        $ids = $this->normalizeIds($ids);
 
-        return $this->trashedQuery()->whereIn('id', $ids)->forceDelete();
+        if ($ids === []) return 0;
+
+        return $this->trashedQuery()->whereKey($ids)->forceDelete();
     }
 
 
     /**
-     * Permanently delete a single record
-     *
-     * @param int $id
-     * @return mixed
+     * Permanently delete a single soft-deleted record.
      */
-    public function wipeOne(int $id): mixed
+    public function wipeOne(int|string $id): int
     {
         return $this->wipe($id);
     }
 
     /**
-     * delete all soft deleted items
-     *
-     * @return mixed
+     * Permanently delete all soft-deleted records.
      */
-    public function wipeAll():  mixed
+    public function wipeAll(): int
     {
         return $this->trashedQuery()->forceDelete();
     }
 
     /**
-     * Normalize ID input to array format
-     *
-     * @param int|array|null $id
-     * @return array|int[]
+     * Normalize one or multiple IDs into an array.
      */
-    private function normalizeIds(int|array|null $id): array
+    private function normalizeIds(int|string|array $ids): array
     {
-        if (is_null($id)) return [];
-        return is_array($id) ? $id : [$id];
+        return is_array($ids) ? array_values($ids) : [$ids];
     }
 
 }
