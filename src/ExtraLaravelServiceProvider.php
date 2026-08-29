@@ -64,7 +64,7 @@ class ExtraLaravelServiceProvider extends ServiceProvider
         foreach ($this->configFiles() as $key => $filename) {
             $this->publishes([
                 __DIR__ . "/config/{$filename}" => config_path($filename)
-            ], $key);
+            ], ['extralaravel',$key]);
         }
     }
 
