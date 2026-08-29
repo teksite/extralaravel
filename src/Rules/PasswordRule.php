@@ -20,25 +20,21 @@ class PasswordRule implements ValidationRule
         $validation=true;
         if (!preg_match('/(?=.*?[a-z])/', $value)) {
             $validation=false;
-            $message[]=(__("the password should contain at least one lowercase character"));
+            $message[]=__("the password should contain at least one lowercase character");
         }
         if (!preg_match('/(?=.*?[A-Z])/', $value)) {
             $validation=false;
-            $message[]=(__("the password should contain at least one uppercase character"));
+            $message[]=__("the password should contain at least one uppercase character");
         }
         if (!preg_match('/(?=.*?[0-9])/', $value)) {
             $validation=false;
-            $message[]=(__("the password should contain at least one number"));
+            $message[]=__("the password should contain at least one number");
         }
         if (!preg_match('/(?=.*?[#?!@$ %^&*-])/', $value)) {
             $validation=false;
-            $message[]=(__("the password should contain at least one special characters (#?!@$ %^&*-)"));
+            $message[]=__("the password should contain at least one special characters (#?!@$ %^&*-)");
         }
 
-        if (!preg_match('/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$ %^&*-]).{8,}$/', $value)) {
-            $validation=false;
-            $message[]=$fail(__("the password in not strong enough"));
-        }
         if ($validation ===false) $fail(implode(", \n", $message));
 
     }

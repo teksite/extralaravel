@@ -106,13 +106,13 @@ class PurgeCacheCommand extends Command
     /**
      * Purge expired database cache records.
      */
-    private function purgeDatabaseCache(): int
+    private function purgeDatabaseCache(): null|int
     {
         $config = config('cache.stores.database');
 
         if (($config['driver'] ?? null) !== 'database') {
             $this->line('ℹ️ Database cache store is not configured. Skipping.');
-            return 0;
+            return null;
         }
 
         $table = $config['table'] ?? 'cache';
@@ -175,11 +175,11 @@ class PurgeCacheCommand extends Command
      * Laravel Sanctum already provides its own pruning command.
      * This package intentionally does not duplicate that logic.
      */
-    private function purgeSanctumTokens(): int
+    private function purgeSanctumTokens(): null|int
     {
         if (!class_exists(\Laravel\Sanctum\Sanctum::class)) {
             $this->line('ℹ️ Laravel Sanctum is not installed. Skipping tokens.');
-            return 0;
+            return null;
         }
         $this->call('sanctum:prune-expired');
         return 0;
@@ -191,13 +191,13 @@ class PurgeCacheCommand extends Command
      * Laravel stores the expiration timestamp in the first
      * 10 bytes of each cache file.
      */
-    private function purgeFileCache(): int
+    private function purgeFileCache(): null|int
     {
         $cachePath = storage_path('framework/cache/data');
 
         if (!$this->files->isDirectory($cachePath)) {
             $this->line("ℹ️ File cache directory does not exist: {$cachePath}");
-            return 0;
+            return null;
         }
 
         $finder = new Finder();
@@ -321,9 +321,9 @@ class PurgeCacheCommand extends Command
     private function logSummary(array $stats, float $duration): void
     {
         Log::info('Extralaravel cache cleanup completed.', [
-            'database'    => $stats['database'],
-            'files'       => $stats['files'],
-            'tokens'      => $stats['tokens'],
+            'database'    => $stats['database'] ?? 'N/A',
+            'files'       => $stats['files'] ?? 'N/A',
+            'tokens'      => $stats['tokens'] ?? 'N/A',
             'duration_ms' => $duration,
         ]);
     }
