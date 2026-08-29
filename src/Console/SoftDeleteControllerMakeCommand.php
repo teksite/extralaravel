@@ -21,8 +21,7 @@ class SoftDeleteControllerMakeCommand extends GeneratorCommand
                 :'trash-resource-controller.stub');
     }
 
-
-    protected function getPath($name)
+    protected function getPath($name): string
     {
         $baseDir = base_path('app/Http/Controllers');
 
@@ -36,19 +35,11 @@ class SoftDeleteControllerMakeCommand extends GeneratorCommand
      * @param string $name
      * @return string
      */
-    protected function qualifyClass($name)
+    protected function qualifyClass($name): string
     {
         $name = ltrim($name, '\\/');
 
         $namespace = $this->rootNamespace() . 'Http\\Controllers';
         return $namespace . '\\' . str_replace('/', '\\', $name);
-    }
-
-
-    protected function getOptions(): array
-    {
-        return [
-            ['api', null, InputOption::VALUE_NONE, 'api trash resource controller.'],
-        ];
     }
 }

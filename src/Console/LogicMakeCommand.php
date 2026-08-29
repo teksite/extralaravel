@@ -3,9 +3,7 @@
 namespace Teksite\Extralaravel\Console;
 
 use Illuminate\Console\GeneratorCommand;
-
 use Illuminate\Support\Str;
-use Symfony\Component\Console\Input\InputOption;
 
 class LogicMakeCommand extends GeneratorCommand
 {
@@ -14,13 +12,13 @@ class LogicMakeCommand extends GeneratorCommand
 
     protected $description = 'Create a new logic class (for repository pattern) to use DB query and other logical process';
 
-    protected function getStub()
+    protected function getStub(): string
     {
         return __DIR__.'/../stubs/logic-class.stub';
     }
 
 
-    protected function getPath($name)
+    protected function getPath($name): string
     {
         $baseDir =  base_path('app/Logics');
 
@@ -34,19 +32,11 @@ class LogicMakeCommand extends GeneratorCommand
      * @param string $name
      * @return string
      */
-    protected function qualifyClass($name)
+    protected function qualifyClass($name): string
     {
         $name = ltrim($name, '\\/');
 
         $namespace =  $this->rootNamespace() . 'Logics';
         return $namespace . '\\' . str_replace('/', '\\', $name);
-    }
-
-
-    protected function getOptions()
-    {
-        return [
-//            ['module', 'M', InputOption::VALUE_OPTIONAL, 'The module to create the request in.'],
-        ];
     }
 }

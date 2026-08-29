@@ -2,16 +2,22 @@
 return [
     /*
     |--------------------------------------------------------------------------
-    | CMS CONFIG
+    | Honeypot
     |--------------------------------------------------------------------------
     |
-    |Add a hidden input field below the name input to indicate whether the field is filled;
-    | use it to prevent form submission if it's empty
+    | Name of the hidden field used to detect automated form submissions.
+    | Requests containing a non-empty value are rejected.
+    |
     */
     'honeypot'      => [
+        'enabled' => true,
+        'status' => 403,
         'field_name' => env('HONEYPOT_FIELD_NAME', 'honeypot'),
     ],
-    'get_Data_path' => '/app/data',
+
+
+
+    'data_path' => '/app/data',
 
     /*
     |--------------------------------------------------------------------------

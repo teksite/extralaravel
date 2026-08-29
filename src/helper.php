@@ -1,12 +1,11 @@
 <?php
 
+use Illuminate\Support\MessageBag;
 use Illuminate\Support\Str;
 
 if (!function_exists('changeToSlug')) {
     /**
-     * @param string $slug
-     * @param string $separator
-     * @return \Illuminate\Support\Stringable
+     * convert string to slug
      */
     function changeToSlug(string $slug, string $separator = '-'): \Illuminate\Support\Stringable
     {
@@ -21,32 +20,47 @@ if (!function_exists('changeToSlug')) {
         $slug = preg_replace('/[ýỳỷỹỵ]/', 'y', $slug);
         $slug = preg_replace('/đ/', 'd', $slug);
 
-        return Str::of($slug)->slug('-', null);
+        return Str::of($slug)->slug($separator, null);
     }
-
 }
+
 if (!function_exists('toEnglishNumber')) {
     /**
-     * @param string $string
-     * @return string
+     * Convert arabic and persian numbers to english numbers
      */
-    function toEnglishNumber(string $string): string
+    function toEnglishNumber(string $value): string
     {
-        $persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
-        $arabicDigits = ['٩', '٨', '٧', '٦', '٥', '٤', '٣', '٢', '١', '٠'];
-        $allPersianDigits = array_merge($persianDigits, $arabicDigits);
-        $replaces = [...range(0, 9), ...range(0, 9)];
+        return strtr($value, [
+            '۰' => '0',
+            '۱' => '1',
+            '۲' => '2',
+            '۳' => '3',
+            '۴' => '4',
+            '۵' => '5',
+            '۶' => '6',
+            '۷' => '7',
+            '۸' => '8',
+            '۹' => '9',
 
-        return str_replace($allPersianDigits, $replaces, $string);
+            '٠' => '0',
+            '١' => '1',
+            '٢' => '2',
+            '٣' => '3',
+            '٤' => '4',
+            '٥' => '5',
+            '٦' => '6',
+            '٧' => '7',
+            '٨' => '8',
+            '٩' => '9',
+        ]);
     }
 }
 
-if (!function_exists('arabic_to_persian_letter')) {
+if (!function_exists('normalizePersianText')) {
     /**
-     * @param string|null $string
-     * @return string|null
+     * Convert arabic letters to persian
      */
-    function arabic_to_persian_letter(?string $string): null|string
+    function normalizePersianText(?string $string): null|string
     {
         if ($string === null) return null;
         $arabic_to_persian_map = [
@@ -57,17 +71,14 @@ if (!function_exists('arabic_to_persian_letter')) {
             'َ' => '', 'ً' => '', 'ُ' => '', 'ٌ' => '', 'ِ' => '', 'ٍ' => '', 'ْ' => '', 'ّ' => '',
         ];
         $string = preg_replace('/[\x{064B}-\x{0652}]/u', '', $string);
-        $string = strtr($string, $arabic_to_persian_map);
-        return $string;
+        return strtr($string, $arabic_to_persian_map);
     }
 }
+
 if (!function_exists('convertSeconds')) {
     /**
      * convert second to hour-minute-second
      * format parameter can be array to return arrays of values carbon format
-     * @param int|null $seconds
-     * @param string|null $format
-     * @return string|array
      */
     function convertSeconds(?int $seconds = null, ?string $format = 'string'): string|array
     {
@@ -88,21 +99,20 @@ if (!function_exists('convertSeconds')) {
         return "{$hours}:{$minutes}:{$sec}";
     }
 }
+
 if (!function_exists('currentUrlWithoutQueries')) {
     /**
-     * @return string
+     * return current url without any query
      */
     function currentUrlWithoutQueries(): string
     {
-        return env('APP_URL') . parse_url(url()->current(), PHP_URL_PATH);
+        return url()->current();
     }
 }
 
-
 if (!function_exists('exploding')) {
     /**
-     * @param string|null $string
-     * @return \Illuminate\Support\Collection|null
+     * explode string by "," and "،"
      */
     function exploding(?string $string): ?\Illuminate\Support\Collection
     {
@@ -137,8 +147,7 @@ if (!function_exists('var_export_short')) {
 
 if (!function_exists('arrayToDot')) {
     /**
-     * @param string $name
-     * @return string|null
+     * convert array to dot syntax
      */
     function arrayToDot(string $name): ?string
     {
@@ -152,8 +161,7 @@ if (!function_exists('arrayToDot')) {
 
 if (!function_exists('dotToArray')) {
     /**
-     * @param string $name
-     * @return string|null
+     * convert dotted string to array
      */
     function dotToArray(string $name): ?string
     {
@@ -165,15 +173,12 @@ if (!function_exists('dotToArray')) {
 
 if (!function_exists('normalizePath')) {
     /**
-     * @param string $path
-     * @return string
+     * normalize path directory
      */
     function normalizePath(string $path): string
     {
-        // Replace all "/" and "\" with DIRECTORY_SEPARATOR
         $normalizedPath = str_replace(['/', '\\', '/\\', '\\/'], DIRECTORY_SEPARATOR, $path);
 
-        // Ensure the path ends with DIRECTORY_SEPARATOR
         return rtrim($normalizedPath, DIRECTORY_SEPARATOR);
     }
 }
@@ -181,106 +186,143 @@ if (!function_exists('normalizePath')) {
 if (!function_exists('is_rtl')) {
     /**
      * Determines if a given language uses right-to-left (RTL) script.
-     *
-     * @param string|null $language Language code to check (optional)
-     * @return bool True if the language is RTL, false otherwise
      */
     function is_rtl(?string $language = null): bool
     {
-        $rtlLanguages = [
-            'ar' => 'Arabic',   // Arabic - عربی
-            'fa' => 'Persian',  // Persian - فارسی
-            'he' => 'Hebrew',   // Hebrew - عبری
-            'ur' => 'Urdu',     // Urdu - اردو
-            'ps' => 'Pashto',   // Pashto - پشتو
-            'ku' => 'Kurdish',  // Kurdish - کردی
-            'sd' => 'Sindhi',   // Sindhi - سندی
-            'yi' => 'Yiddish',  // Yiddish - ییدیش
-        ];
+        $language ??= app()->getLocale();
 
-        $languageCodes = array_keys($rtlLanguages);
+        return in_array(
+            $language,
+            ['ar', 'fa', 'he', 'ur', 'ps', 'ku', 'sd', 'yi'],
+            true
+        );
 
-        if ($language === null) {
-            return in_array(app()->getLocale(), $languageCodes);
-        }
-
-        return in_array($language, $languageCodes);
     }
 }
 
-
 if (!function_exists('get_error')) {
 
-    function get_error($errors, string $name)
+    function get_error(MessageBag $errors, string $name): array
     {
-        $stringifiedName = arrayToDot($name);
-        return $errors->get($stringifiedName);
+        return $errors->get(arrayToDot($name));
     }
 }
 
 if (!function_exists('getStaticData')) {
     /**
-     * Retrieve data from a specified path using dot notation, similar to Laravel's config().
+     * Get static data from PHP files using dot notation.
      *
-     * @param string $key Dot notation key (e.g., 'app.data.times.iran.tehran')
-     * @param mixed|null $default Default value if key or file is not found
-     * @param string $pre_path Optional prefix path to prepend to the key
+     * Example:
+     * getStaticData('app.data.times.iran.tehran');
+     *
+     * @param string $key
+     * @param mixed $default
+     * @param string $prePath
      * @return mixed
      */
-    function getStaticData(string $key, mixed $default = null, string $pre_path = ''): mixed
+    function getStaticData(string $key, mixed $default = null, string $prePath = ''): mixed
     {
+        $prePath = trim(str_replace(['/', '\\'], '.', $prePath), '.');
 
-        // Normalize pre_path to dot notation
-        $pre_path = trim(str_replace(['/', '\\'], '.', $pre_path), '.');
-        $notedPath = $pre_path ? $pre_path . '.' . $key : $key;
+        $key = trim($key, '.');
 
-        // Generate cache key
-        $cacheKey = 'data_' . str_replace('.', '_', $notedPath);
+        if ($key === '') return $default;
 
-        // Use cache to avoid repeated file loading
-        return cache()->remember($cacheKey, now()->addHour(), function () use ($notedPath, $default) {
-            // Split key into segments
-            $segments = explode('.', trim($notedPath, '.'));
+        $path = $prePath !== '' ? "{$prePath}.{$key}" : $key;
 
-            // Prevent empty key
-            if (empty($segments)) {
+        $segments = explode('.', $path);
+
+        foreach ($segments as $segment) {
+            if ($segment === '' || $segment === '.' || $segment === '..' || str_contains($segment, "\0") || str_contains($segment, '/') || str_contains($segment, '\\')) {
                 return $default;
             }
+        }
 
-            // Find the file path
+        // Cache resolved files and loaded data during the current request.
+        static $resolvedFiles = [];
+        static $loadedFiles = [];
+
+        /*
+         * Find the PHP file.
+         *
+         * Example:
+         * app.data.times.iran.tehran
+         *
+         * Tries:
+         * app.php
+         * app/data.php
+         * app/data/times.php
+         * ...
+         */
+        if (!isset($resolvedFiles[$path])) {
+            $resolvedFiles[$path] = null;
+
+            $basePath = realpath(base_path());
+
+            if ($basePath === false) return $default;
+
             $fileSegments = [];
-            $arrayKeys = [];
-            $filePath = '';
 
             foreach ($segments as $index => $segment) {
                 $fileSegments[] = $segment;
-                $potentialPath = base_path(implode(DIRECTORY_SEPARATOR, $fileSegments) . '.php');
 
-                if (file_exists($potentialPath)) {
-                    $filePath = $potentialPath;
-                    $arrayKeys = array_slice($segments, $index + 1);
-                    break;
+                $candidate = base_path(implode(DIRECTORY_SEPARATOR, $fileSegments) . '.php');
+
+                $realPath = realpath($candidate);
+
+                if ($realPath === false || !is_file($realPath)) {
+                    continue;
                 }
-            }
 
-            // Return default if no valid file is found
-            if (!$filePath) {
+                /*
+                 * Make sure the resolved file is inside the application.
+                 * This also protects against malicious symlinks.
+                 */
+                $base = rtrim(str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $basePath), DIRECTORY_SEPARATOR);
+
+                $file = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $realPath);
+
+                if ($file !== $base && !str_starts_with($file, $base . DIRECTORY_SEPARATOR)) {
+                    return $default;
+                }
+
+                $resolvedFiles[$path] = [$realPath, array_slice($segments, $index + 1),];
+
+                break;
+            }
+        }
+
+        if ($resolvedFiles[$path] === null) {
+            return $default;
+        }
+
+        [$filePath, $arrayKeys] = $resolvedFiles[$path];
+
+        /*
+         * Load each PHP file only once per request.
+         */
+        if (!array_key_exists($filePath, $loadedFiles)) {
+            $data = require $filePath;
+
+            if (!is_array($data)) {
                 return $default;
             }
 
-            // Load the data file
-            $data = include $filePath;
+            $loadedFiles[$filePath] = $data;
+        }
 
-            // Navigate through nested array
-            foreach ($arrayKeys as $key) {
-                if (is_array($data) && array_key_exists($key, $data)) {
-                    $data = $data[$key];
-                } else {
-                    return $default;
-                }
+        $data = $loadedFiles[$filePath];
+
+        /*
+         * Traverse nested array.
+         */
+        foreach ($arrayKeys as $arrayKey) {
+            if (!is_array($data) || !array_key_exists($arrayKey, $data)) {
+                return $default;
             }
+            $data = $data[$arrayKey];
+        }
 
-            return $data;
-        });
+        return $data;
     }
 }
