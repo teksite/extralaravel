@@ -3,6 +3,7 @@
 namespace Teksite\Extralaravel\Console;
 
 use Illuminate\Console\Command;
+use Illuminate\Database\ConnectionInterface;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
@@ -13,298 +14,339 @@ use Symfony\Component\Finder\Finder;
 class PurgeCacheCommand extends Command
 {
     protected $signature = 'cache:purge
-                            {--connection= : Database connection for cache}
-                            {--limit=1000 : Limit for deleting records per batch}
-                            {--dry-run : Simulate without actually deleting}
-                            {--force : Force delete even on production}';
+        {--connection= : Database connection used by the database cache store}
+        {--limit=1000 : Maximum records/files to process per batch}
+        {--dry-run : Show what would be deleted without deleting anything}
+        {--force : Allow destructive operation in production}
+        {--skip-database : Skip database cache cleanup}
+        {--skip-files : Skip file cache cleanup}
+        {--skip-tokens : Skip Sanctum token cleanup}';
 
-    protected $description = 'Clear expired database cache, tokens, and filesystem cache';
 
-    public function __construct(
-        protected Filesystem $files
-    ) {
+    protected $description = 'Purge expired database cache, file cache, and Sanctum tokens';
+
+    private const int DEFAULT_LIMIT = 1000;
+
+    public function __construct(protected Filesystem $files)
+    {
         parent::__construct();
     }
 
     public function handle(): int
     {
-        // Safety check for production
-        if (!$this->option('force') && app()->environment('production')) {
-            if (!$this->confirm('⚠️  You are in production environment. Do you want to continue?')) {
-                $this->info('Operation cancelled.');
-                return 1;
+        if (!$this->confirmProductionExecution()) return self::FAILURE;
+
+        $start = microtime(true);
+        $dryRun = (bool)$this->option('dry-run');
+        $this->displayStartMessage($dryRun);
+
+        $stats = ['database' => 0, 'files' => 0, 'tokens' => 0,];
+
+        try {
+            if (!$this->option('skip-database')) {
+                $stats['database'] = $this->purgeDatabaseCache();
             }
+
+            if (!$this->option('skip-tokens')) {
+                $stats['tokens'] = $this->purgeSanctumTokens();
+            }
+
+            if (!$this->option('skip-files')) {
+                $stats['files'] = $this->purgeFileCache();
+            }
+        } catch (\Throwable $e) {
+            $this->error("Cache cleanup failed: {$e->getMessage()}");
+            $this->logException($e);
+            return self::FAILURE;
         }
 
-        $this->info('🧹 Starting cache cleanup...');
-        $startTime = microtime(true);
+        $duration = round((microtime(true) - $start) * 1000, 2);
 
-        if ($this->option('dry-run')) {
-            $this->warn('⚠️  DRY RUN MODE - No actual deletions will occur');
-            $this->newLine();
-        }
+        $this->displaySummary($stats, $duration);
 
-        $stats = [
-            'database' => 0,
-            'tokens' => 0,
-            'files' => 0,
-        ];
+        if (!$dryRun) $this->logSummary($stats, $duration);
 
-        // 1. Clean Database Cache
-        $stats['database'] = $this->cleanDatabaseCache();
-
-        // 2. Clean Personal Access Tokens
-        $stats['tokens'] = $this->cleanPersonalAccessTokens();
-
-        // 3. Clean File Cache
-        $stats['files'] = $this->cleanFileCache();
-
-        $duration = round((microtime(true) - $startTime) * 1000, 2);
-        $memory =function_exists('memory_get_peak_usage') ?  round(memory_get_peak_usage(true) / 1024 / 1024, 2) : 'UNKNOWN';
-
-        $this->newLine();
-        $this->info("✅ Cleanup completed in {$duration}ms (Memory: {$memory}MB)");
-
-        $this->table(
-            ['Cache Type', 'Deleted Items'],
-            [
-                ['Database Cache', $stats['database']],
-                ['Expired Tokens', $stats['tokens']],
-                ['File Cache', $stats['files']],
-                ['━━━━━━━━━━━━━━', '━━━━━━━━━━━━'],
-                ['Total', array_sum($stats)],
-            ]
-        );
-
-        // Log the operation
-        if (!$this->option('dry-run')) {
-            Log::channel('daily')->info('Cache cleanup completed', [
-                'stats' => $stats,
-                'duration_ms' => $duration,
-                'memory_mb' => $memory
-            ]);
-        }
-
-        return 0;
+        return self::SUCCESS;
     }
 
-    protected function cleanDatabaseCache(): int
+    /**
+     * Ask for confirmation before destructive production operations.
+     */
+    private function confirmProductionExecution(): bool
     {
-        $table = Config::get('cache.stores.database.table', 'cache');
-        $connection = $this->option('connection') ?? Config::get('cache.stores.database.connection');
+        if (app()->environment('production') && !$this->option('force')) {
+            return $this->confirm('⚠️ Application is running in production. Continue?');
+        }
+        return true;
+    }
 
-        if (!$this->isTableExists($table, $connection)) {
-            $this->warn("Table '{$table}' not found, skipping...");
+    /**
+     * Display command start information.
+     */
+    private function displayStartMessage(bool $dryRun): void
+    {
+        $this->info('🧹 Starting cache cleanup...');
+
+        if ($dryRun) {
+            $this->warn('⚠️ DRY RUN MODE - No data will be deleted.');
+            $this->newLine();
+        }
+    }
+
+    /**
+     * Get validated batch limit.
+     */
+    private function getLimit(): int
+    {
+        $limit = (int)$this->option('limit');
+
+        return $limit > 0 ? $limit : self::DEFAULT_LIMIT;
+    }
+
+    /**
+     * Purge expired database cache records.
+     */
+    private function purgeDatabaseCache(): int
+    {
+        $config = config('cache.stores.database');
+
+        if (($config['driver'] ?? null) !== 'database') {
+            $this->line('ℹ️ Database cache store is not configured. Skipping.');
             return 0;
         }
 
-        // First, check if table has the required columns
-        $columns = $this->getTableColumns($table, $connection);
+        $table = $config['table'] ?? 'cache';
 
-        if (!in_array('expiration', $columns)) {
-            $this->error("Table '{$table}' doesn't have 'expiration' column");
+        $connectionName = $this->option('connection') ?: ($config['connection'] ?? null);
+
+        $connection = DB::connection($connectionName);
+
+        if (!$this->tableExists($connection, $table)) {
+            $this->warn("Database cache table [{$table}] does not exist. Skipping...");
             return 0;
         }
 
-        $query = DB::connection($connection)
-                   ->table($table)
-                   ->where('expiration', '<', time());
+        if (!$this->hasColumn($connection, $table, 'expiration')) {
+            $this->warn("Database cache table [{$table}] does not contain " . "[expiration]. Skipping...");
+            return 0;
+        }
+
+        $query = $connection->table($table)->where('expiration', '<', time());
 
         if ($this->option('dry-run')) {
             $count = $query->count();
-            $this->line("📊 Would delete {$count} expired cache items from '{$table}'");
+            $this->line("📊 Would delete {$count} expired database cache item(s).");
             return 0;
         }
 
         $deleted = 0;
-        $limit = (int)$this->option('limit');
+        $limit = $this->getLimit();
 
-        // Method 1: Simple delete (works without ID column)
-        do {
-            // For tables without auto-increment ID, use limit without ordering
-            $affected = DB::connection($connection)
-                          ->table($table)
-                          ->where('expiration', '<', time())
-                          ->limit($limit)
-                          ->delete();
+        while (true) {
+            $affected = $connection
+                ->table($table)
+                ->where('expiration', '<', time())
+                ->limit($limit)
+                ->delete();
 
             $deleted += $affected;
 
-            if ($affected > 0) {
-                $this->output->write('.');
-            }
+            if ($affected === 0) break;
 
-            // Avoid infinite loop if something goes wrong
-            if ($affected === 0) {
-                break;
-            }
+            $this->newLine(2);
 
-            // Small delay to avoid overloading the database
-            if ($affected === $limit) {
-                usleep(10000); // 10ms
-            }
-
-        } while ($affected === $limit);
+            if ($affected < $limit) break;
+        }
 
         if ($deleted > 0) {
             $this->newLine();
-            $this->info("🗑️  Deleted {$deleted} expired cache item(s) from database");
+
+            $this->info("🗑️ Deleted {$deleted} expired database cache item(s).");
         } else {
-            $this->line("✨ No expired cache items found in database");
+            $this->line('✨ No expired database cache items found.');
         }
 
         return $deleted;
     }
 
-    protected function cleanPersonalAccessTokens(): int
+    /**
+     * Purge expired Sanctum tokens.
+     *
+     * Laravel Sanctum already provides its own pruning command.
+     * This package intentionally does not duplicate that logic.
+     */
+    private function purgeSanctumTokens(): int
     {
-        // Check if Sanctum is installed
-        if (!class_exists('\Laravel\Sanctum\Sanctum')) {
-            $this->line("ℹ️  Laravel Sanctum not installed, skipping tokens cleanup");
+        if (!class_exists(\Laravel\Sanctum\Sanctum::class)) {
+            $this->line('ℹ️ Laravel Sanctum is not installed. Skipping tokens.');
             return 0;
         }
-
-        $table = Config::get('sanctum.table', 'personal_access_tokens');
-
-        if (!$this->isTableExists($table)) {
-            $this->warn("Table '{$table}' not found, skipping tokens cleanup");
-            return 0;
-        }
-
-        $columns = $this->getTableColumns($table);
-
-        if (!in_array('expires_at', $columns)) {
-            $this->warn("Table '{$table}' doesn't have 'expires_at' column, skipping");
-            return 0;
-        }
-
-        $query = DB::table($table)
-                   ->where('expires_at', '<', Carbon::now());
-
-        if ($this->option('dry-run')) {
-            $count = $query->count();
-            $this->line("📊 Would delete {$count} expired tokens");
-            return 0;
-        }
-
-        // For tokens table, use chunk by ID if available
-        if (in_array('id', $columns)) {
-            $deleted = 0;
-            $query->chunkById(500, function ($tokens) use (&$deleted) {
-                $ids = $tokens->pluck('id')->toArray();
-                $deleted += DB::table($tokens->first()->getTable())
-                              ->whereIn('id', $ids)
-                              ->delete();
-                $this->output->write('.');
-            });
-        } else {
-            // Fallback to simple delete
-            $deleted = $query->delete();
-        }
-
-        if ($deleted > 0) {
-            $this->newLine();
-            $this->info("🔑 Deleted {$deleted} expired personal access token(s)");
-        }
-
-        return $deleted;
+        $this->call('sanctum:prune-expired');
+        return 0;
     }
 
-    protected function cleanFileCache(): int
+    /**
+     * Purge expired Laravel file cache entries.
+     *
+     * Laravel stores the expiration timestamp in the first
+     * 10 bytes of each cache file.
+     */
+    private function purgeFileCache(): int
     {
         $cachePath = storage_path('framework/cache/data');
 
-        if (!$this->files->exists($cachePath)) {
-            $this->warn("Cache path not found: {$cachePath}");
+        if (!$this->files->isDirectory($cachePath)) {
+            $this->line("ℹ️ File cache directory does not exist: {$cachePath}");
             return 0;
         }
 
         $finder = new Finder();
-        $deleted = 0;
-        $now = time();
-
         try {
             $finder->files()
                    ->in($cachePath)
                    ->ignoreDotFiles(true)
-                   ->depth('== 0'); // Only top level files to avoid recursion issues
+                   ->depth('> 1');
+
+            $now = time();
+            $deleted = 0;
+            $limit = $this->getLimit();
 
             foreach ($finder as $file) {
-                // Check if file is expired (older than cache lifetime)
-                $cacheLifetime = Config::get('cache.stores.file.lifetime', 3600);
-                $expirationTime = $file->getMTime() + $cacheLifetime;
-
-                if ($expirationTime < $now) {
+                if ($this->isExpiredCacheFile($file->getRealPath(), $now)) {
                     if (!$this->option('dry-run')) {
                         $this->files->delete($file->getRealPath());
                     }
                     $deleted++;
 
-                    if ($deleted % 100 === 0) {
-                        $this->output->write('.');
-                    }
+                    if ($deleted % $limit === 0) $this->output->write('.');
                 }
             }
 
-            // Clean empty directories after file deletion
             if (!$this->option('dry-run') && $deleted > 0) {
                 $this->deleteEmptyDirectories($cachePath);
             }
 
-            if ($deleted > 0 && !$this->option('dry-run')) {
+            if ($this->option('dry-run')) {
+                $this->line("📊 Would delete {$deleted} expired file cache item(s).");
+            } elseif ($deleted > 0) {
                 $this->newLine();
-                $this->info("📁 Deleted {$deleted} expired cached file(s)");
-            } elseif ($this->option('dry-run')) {
-                $this->line("📊 Would delete {$deleted} expired cached file(s)");
+                $this->info("📁 Deleted {$deleted} expired file cache item(s).");
             } else {
-                $this->line("📁 No expired cache files found");
+                $this->line('✨ No expired file cache items found.');
             }
 
-        } catch (\Exception $e) {
-            $this->error("Error cleaning file cache: " . $e->getMessage());
-            Log::warning('File cache cleanup failed', ['error' => $e->getMessage()]);
+            return $deleted;
+        } catch (\Throwable $e) {
+            $this->error("File cache cleanup failed: {$e->getMessage()}");
+            $this->logException($e);
+            return 0;
         }
-
-        return $deleted;
     }
 
-    protected function deleteEmptyDirectories(string $path): void
+    /**
+     * Determine whether a Laravel file cache entry is expired.
+     */
+    private function isExpiredCacheFile(string $path, int $now): bool
     {
-        if (!$this->files->isDirectory($path)) {
-            return;
+        $handle = @fopen($path, 'rb');
+
+        if ($handle === false) return false;
+
+        try {
+            $expiration = fread($handle, 10);
+
+            if ($expiration === false || strlen($expiration) !== 10) return false;
+
+            if (!ctype_digit($expiration))   return false;
+
+            return $now >= (int)$expiration;
+        } finally {
+            fclose($handle);
         }
+    }
 
-        $directories = iterator_to_array($this->files->directories($path));
+    /**
+     * Remove empty cache directories.
+     */
+    private function deleteEmptyDirectories(string $path): void
+    {
+        if (!$this->files->isDirectory($path)) return;
 
-        foreach ($directories as $directory) {
+        foreach ($this->files->directories($path) as $directory) {
             $this->deleteEmptyDirectories($directory);
 
-            if (count($this->files->files($directory)) === 0 &&
-                count($this->files->directories($directory)) === 0) {
+            if (count($this->files->files($directory)) === 0 && count($this->files->directories($directory)) === 0) {
                 $this->files->deleteDirectory($directory);
             }
         }
     }
 
-    protected function isTableExists(string $table, ?string $connection = null): bool
+    /**
+     * Determine whether a database table exists.
+     */
+    private function tableExists(ConnectionInterface $connection, string $table): bool
     {
         try {
-            return DB::connection($connection)
-                     ->getSchemaBuilder()
-                     ->hasTable($table);
-        } catch (\Exception $e) {
+            return $connection->getSchemaBuilder()->hasTable($table);
+        } catch (\Throwable) {
             return false;
         }
     }
 
-    protected function getTableColumns(string $table, ?string $connection = null): array
+    /**
+     * Determine whether a database table contains a column.
+     */
+    private function hasColumn(ConnectionInterface $connection, string $table, string $column): bool
     {
         try {
-            return DB::connection($connection)
-                     ->getSchemaBuilder()
-                     ->getColumnListing($table);
-        } catch (\Exception $e) {
-            return [];
+            return in_array(
+                $column,
+                $connection->getSchemaBuilder()->getColumnListing($table), true);
+        } catch (\Throwable) {
+            return false;
         }
+    }
+
+    /**
+     * Log an exception without exposing sensitive command arguments.
+     */
+    private function logException(\Throwable $e): void
+    {
+        report($e);
+    }
+
+    /**
+     * Log cleanup summary.
+     */
+    private function logSummary(array $stats, float $duration): void
+    {
+        Log::info('Extralaravel cache cleanup completed.', [
+            'database'    => $stats['database'],
+            'files'       => $stats['files'],
+            'tokens'      => $stats['tokens'],
+            'duration_ms' => $duration,
+        ]);
+    }
+
+    /**
+     * Display cleanup summary.
+     */
+    private function displaySummary(array $stats, float $duration): void
+    {
+        $memory = round(memory_get_peak_usage(true) / 1024 / 1024, 2);
+
+        $this->newLine();
+
+        $this->info("✅ Cleanup completed in {$duration}ms " . "(Peak memory: {$memory} MB)");
+
+        $this->table(
+            ['Cache Type', 'Deleted Items'],
+            [
+                ['Database Cache', $stats['database']],
+                ['File Cache', $stats['files']],
+                ['Sanctum Tokens', $stats['tokens']],
+                ['Total', array_sum($stats)],
+            ]
+        );
     }
 }
