@@ -22,9 +22,8 @@ class StorageCustomLink extends Command
 
         $links = config('storage.custom_links', []);
 
-        if (!is_array($links) || empty($links)) {
+        if (!is_array($links) || $links === []) {
             $this->components->warn('No links configured.');
-
             return self::SUCCESS;
         }
 
@@ -34,33 +33,26 @@ class StorageCustomLink extends Command
 
         $this->components->info('Processing symbolic links...');
 
-        foreach ($links as $link => $target) {
-
-            if (!isset($config['link'], $config['target'])) {
-                $this->components->error("Invalid config for [{$key}]");
-                $failed++;
-                continue;
-            }
-
-            $link = $config['link'];
-            $target = $config['target'];
-
+        foreach ($links as $key => $config) {
             try {
+                if (!is_array($config) || !isset($config['link'], $config['target'])) {
+                    throw new \RuntimeException("Invalid configuration for [{$key}].");
+                }
+
+                $link = $config['link'];
+                $target = $config['target'];
 
                 $this->prepareDirectories($link, $target);
-
                 $status = $this->handleExistingLink($link);
 
+
                 if ($status === 'skipped') {
-                    $this->components->twoColumnDetail( "⚠ {$key}", 'Already exists' );
+                    $this->components->twoColumnDetail("⚠ {$key}", '<fg=green;options=bold>Already exists</>');
+                    $skipped++;
                     $skipped++;
                     continue;
                 }
 
-                if ($status === 'failed') {
-                    $failed++;
-                    continue;
-                }
 
                 $created = $this->createLink($target, $link);
 
@@ -76,19 +68,17 @@ class StorageCustomLink extends Command
                 $success++;
 
             } catch (\Throwable $e) {
-
                 $this->components->twoColumnDetail(
                     "✗ {$key}",
-                    $e->getMessage()
+                    '<fg=green;options=bold>' . $e->getMessage() . '</>'
                 );
 
                 $failed++;
             }
         }
 
-        if ($this->option('verify')) {
-            $this->verifyLinks($links);
-        }
+        if ($this->option('verify')) $this->verifyLinks($links);
+
 
         $duration = round(microtime(true) - $start, 3);
 
@@ -96,10 +86,9 @@ class StorageCustomLink extends Command
 
         $this->components->info('Summary');
 
-        $this->components->twoColumnDetail('✓ Success', (string) $success);
-        $this->components->twoColumnDetail('✗ Failed', (string) $failed);
-        $this->components->twoColumnDetail('⚠ Skipped', (string) $skipped);
-        $this->components->twoColumnDetail('⏱ Time', "{$duration}s");
+        $col1_msg = "✓ Success: $success | ✗ Failed: $failed | ⚠ Skipped: $skipped";
+        $col2_msg = "⏱ Time {$duration}s";
+        $this->components->twoColumnDetail($col1_msg, $col2_msg);
 
         return $failed > 0
             ? self::FAILURE
@@ -109,13 +98,8 @@ class StorageCustomLink extends Command
     private function createLink(string $target, string $link): bool
     {
         if ($this->option('relative')) {
-
-            $target = $this->relativePath(
-                dirname($link),
-                $target
-            );
+            $target = $this->relativePath(dirname($link), $target);
         }
-
         return symlink($target, $link);
     }
 
@@ -127,11 +111,7 @@ class StorageCustomLink extends Command
         $from = explode('/', trim($from, '/'));
         $to = explode('/', trim($to, '/'));
 
-        while (
-            count($from) &&
-            count($to) &&
-            ($from[0] === $to[0])
-        ) {
+        while ($from !== [] && $to !== [] && $from[0] === $to[0]) {
             array_shift($from);
             array_shift($to);
         }
@@ -142,47 +122,29 @@ class StorageCustomLink extends Command
     private function prepareDirectories(string $link, string $target): void
     {
         if (!File::exists($target)) {
-            File::makeDirectory(
-                $target,
-                self::DIRECTORY_PERMISSION,
-                true
-            );
+            File::makeDirectory($target, self::DIRECTORY_PERMISSION, true);
         }
 
         $parent = dirname($link);
 
         if (!File::exists($parent)) {
-            File::makeDirectory(
-                $parent,
-                self::DIRECTORY_PERMISSION,
-                true
-            );
+            File::makeDirectory($parent, self::DIRECTORY_PERMISSION, true);
         }
     }
 
     private function handleExistingLink(string $link): ?string
     {
-        if (!file_exists($link) && !is_link($link)) {
-            return null;
-        }
+        if (!file_exists($link) && !is_link($link)) return null;
 
         if (!$this->option('force')) {
-
-            if (is_link($link)) {
-                return 'skipped';
-            }
-
-            throw new \RuntimeException(
-                "Path exists and is not a symbolic link: {$link}"
-            );
+            if (is_link($link)) return 'skipped';
+            throw new \RuntimeException("Path exists and is not a symbolic link: {$link}");
         }
 
         if (is_link($link)) {
             unlink($link);
-
             return null;
         }
-
         File::deleteDirectory($link);
 
         return null;
@@ -196,34 +158,28 @@ class StorageCustomLink extends Command
 
         foreach ($links as $key => $config) {
 
+            if (!is_array($config) || !isset($config['link'], $config['target'])) {
+                $this->components->twoColumnDetail("✗ {$key}", 'Invalid configuration');
+                continue;
+            }
+
+
             $link = $config['link'];
 
             if (!is_link($link)) {
-
-                $this->components->twoColumnDetail(
-                    "✗ {$key}",
-                    'Invalid symlink'
-                );
-
+                $this->components->twoColumnDetail("✗ {$key}", 'Invalid symlink');
                 continue;
             }
+
 
             $target = realpath($link);
 
-            if (!$target || !file_exists($target)) {
-
-                $this->components->twoColumnDetail(
-                    "⚠ {$key}",
-                    'Broken link'
-                );
-
+            if ($target === false || !file_exists($target)) {
+                $this->components->twoColumnDetail("⚠ {$key}", 'Broken link');
                 continue;
             }
 
-            $this->components->twoColumnDetail(
-                "✓ {$key}",
-                $target
-            );
+            $this->components->twoColumnDetail("✓ {$key}", $target);
         }
     }
 }
