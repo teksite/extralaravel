@@ -1,6 +1,19 @@
 {
     "name": "teksite/extralaravel",
-    "description": "this package add some features such as rules, middlewares, functions to laravel",
+    "description": "A collection of reusable utilities, validation rules, middleware, Eloquent casts, traits, Artisan commands, helpers, and developer tools for Laravel applications.",
+    "keywords": [
+        "laravel",
+        "laravel-package",
+        "validation-rules",
+        "helpers",
+        "api",
+        "api-validation",
+        "soft-delete",
+        "trash",
+        "phone-verification",
+        "honeypot",
+        "slug"
+    ],
     "authors": [
         {
             "name": "Sina Zangiband",
@@ -8,6 +21,7 @@
         }
     ],
     "minimum-stability": "dev",
+    "prefer-stable": true,
     "license": "MIT",
     "autoload": {
         "psr-4": {
@@ -21,6 +35,19 @@
         "php": "^8.3",
         "laravel/framework": "^13.0",
         "morilog/jalali": "^3.5"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^11.0",
+        "phpunit/phpunit": "^11.5|^12.5"
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Teksite\\Extralaravel\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "test-coverage": "phpunit --coverage-text"
     },
     "extra": {
         "laravel": {
