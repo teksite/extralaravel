@@ -16,7 +16,7 @@ class ApiFormRequest extends FormRequest
         $exc=(new $exception($validator))->errorBag($this->errorBag);
 
         return throw new HttpResponseException(response()->json([
-            'message' => $exc->getMessage(),
+            'message' => trans('Validation failed.'),
             'errors' => $exc->errors(),
             'status' => 422,
             'data' => [],

@@ -101,11 +101,11 @@ Simplify data handling with custom casts:
 ```php
 use Teksite\Extralaravel\Casts\SlugCast;
 use Teksite\Extralaravel\Casts\IpCast;
-use Teksite\Extralaravel\Casts\DateCast;
+use Teksite\Extralaravel\Casts\JalaliDateCast;
 
 protected $casts = [
     'slugColumn' => SlugCast::class,
-    'dateColumn'=> DateCast::class
+    'dateColumn'=> JalaliDateCast::class
     'ip_addressColumn' => IpCast::class,
 ];
 ```

@@ -7,19 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class SlugCast implements CastsAttributes
 {
-    protected array $slugs=[];
+    protected array $slugs = [];
 
-    public function __construct(public ?string $routeName =null , ...$slugs)
-    {
-        $this->slugs =$slugs;
-    }
+
 
     public function get(Model $model, string $key, mixed $value, array $attributes): mixed
     {
-        if (request()->ajax() && !is_null($this->routeName)){
-            return  route($this->routeName, $value) ;
-        }
-        return  $value ;
+        return $value;
     }
 
     public function set(Model $model, string $key, mixed $value, array $attributes): mixed

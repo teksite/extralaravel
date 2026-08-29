@@ -6,7 +6,7 @@ use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\App;
 
-class DateCast implements CastsAttributes
+class JalaliDateCast implements CastsAttributes
 {
 
     public function __construct()
