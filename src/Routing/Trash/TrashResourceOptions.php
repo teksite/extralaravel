@@ -7,14 +7,7 @@ use InvalidArgumentException;
 
 final readonly class TrashResourceOptions
 {
-    /**
-     * @param array<int, string> $middleware
-     * @param array<int, string>|null $only
-     * @param array<int, string> $except
-     * @param array<string, string> $where
-     * @param array<string, string> $parameters
-     * @param array<string, string> $names
-     */
+
     private function __construct(
         public string $prefix,
         public array  $middleware,
@@ -81,8 +74,6 @@ final readonly class TrashResourceOptions
         if ($actions === null) return null;
 
         if (is_string($actions) || $actions instanceof BackedEnum) return [self::stringifyAction($actions)];
-
-        if (is_string($actions)) return [$actions];
 
         if (!is_array($actions)) throw new InvalidArgumentException('Trash resource actions must be an array.',);
 

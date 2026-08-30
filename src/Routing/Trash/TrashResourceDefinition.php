@@ -4,22 +4,17 @@ namespace Teksite\Extralaravel\Routing\Trash;
 
 final class TrashResourceDefinition
 {
-    /**
-     * @return array<string, array{
-     *     method: string,
-     *     uri: string,
-     *     action: string
-     * }>
-     */
+
+    private static ?array $actions = null;
+
     public static function actions(): array
     {
-        return [
+        return self::$actions ??= [
             TrashAction::INDEX->value => [
                 'method'  => 'GET',
                 'uri'     => 'trash',
                 'action'  => 'index',
                 'binding' => false,
-
             ],
 
             TrashAction::REINSTATE->value => [
@@ -27,7 +22,6 @@ final class TrashResourceDefinition
                 'uri'     => 'trash/{resource}',
                 'action'  => 'reinstate',
                 'binding' => true,
-
             ],
 
             TrashAction::PRUNE->value => [
@@ -35,7 +29,6 @@ final class TrashResourceDefinition
                 'uri'     => 'trash/{resource}',
                 'action'  => 'prune',
                 'binding' => true,
-
             ],
 
             TrashAction::RESTORE->value => [
@@ -43,7 +36,6 @@ final class TrashResourceDefinition
                 'uri'     => 'trash',
                 'action'  => 'restore',
                 'binding' => false,
-
             ],
 
             TrashAction::FLUSH->value => [
@@ -51,7 +43,6 @@ final class TrashResourceDefinition
                 'uri'     => 'trash',
                 'action'  => 'flush',
                 'binding' => false,
-
             ],
         ];
     }

@@ -136,7 +136,6 @@ class StorageCustomLink extends Command
 
         if (is_link($link)) throw new \RuntimeException("Path exists and is not a symbolic link: {$link}");
 
-        unlink($link);
     }
 
     private function verifyLinks(array $links): void

@@ -10,6 +10,7 @@ use Teksite\Extralaravel\Console\PurgeCacheCommand;
 use Teksite\Extralaravel\Console\LogicMakeCommand;
 use Teksite\Extralaravel\Console\SoftDeleteControllerMakeCommand;
 use Teksite\Extralaravel\Console\StorageCustomLink;
+use Teksite\Extralaravel\Routing\Trash\PendingTrashResourceRegistration;
 use Teksite\Extralaravel\Routing\Trash\TrashResourceOptions;
 use Teksite\Extralaravel\Routing\Trash\TrashResourceRegistrar;
 
@@ -58,9 +59,19 @@ class ExtraLaravelServiceProvider extends ServiceProvider
 
     private function registerTrashResourceMacro(): void
     {
-        Route::macro('trashResource', function (string $name, string $controller, array $options = []): void {
-            $registrar = app(TrashResourceRegistrar::class);
-            $registrar->register($name, $controller, TrashResourceOptions::from($options));
+        Route::macro('trashResource', function (string $name, string $controller, array $options = []): PendingTrashResourceRegistration {
+            return new PendingTrashResourceRegistration(
+                app(TrashResourceRegistrar::class),
+                $name,
+                $controller,
+                $options,
+            );
+        });
+
+        Route::macro('trashResources', function (array $resources, array $options = []): void {
+            foreach ($resources as $name => $controller) {
+                Route::trashResource($name, $controller, $options);
+            }
         });
     }
 

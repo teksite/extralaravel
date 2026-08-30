@@ -4,7 +4,6 @@ namespace Teksite\Extralaravel\Casts;
 
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\App;
 
 class JalaliDateCast implements CastsAttributes
 {

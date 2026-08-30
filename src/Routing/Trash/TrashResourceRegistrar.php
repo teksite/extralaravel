@@ -11,17 +11,17 @@ final class TrashResourceRegistrar
 {
     public function register(string $name, string $controller, TrashResourceOptions $options): void
     {
-        $name = $this->normalizeResourceName($name);
         $segments = $this->parseResourceSegments($name);
+        $resourceName = implode('.', $segments);
         $actions = $this->resolveActions($options);
 
         if ($actions === []) return;
 
         Route::group(
             $this->groupAttributes($options),
-            function () use ($name, $segments, $controller, $options, $actions): void {
+            function () use ($resourceName, $segments, $controller, $options, $actions): void {
                 foreach ($actions as $actionName => $action) {
-                    $this->registerRoute($name, $segments, $controller, $options, $actionName, $action);
+                    $this->registerRoute($resourceName, $segments, $controller, $options, $actionName, $action);
                 }
             },
         );
@@ -36,10 +36,8 @@ final class TrashResourceRegistrar
         return $actions;
     }
 
-
     private function registerRoute(string $name, array $segments, string $controller, TrashResourceOptions $options, string $actionName, array $action): void
     {
-
         $uri = $this->buildUri($segments, $action, $options);
 
         $route = Route::match([$action['method']], $uri, [$controller, $action['action']]);
@@ -48,16 +46,13 @@ final class TrashResourceRegistrar
 
         if ($options->where !== []) $route->where($options->where);
 
-
         if ($options->bindingFields !== []) $route->setBindingFields($options->bindingFields);
-
 
         $route->withTrashed();
 
         $route->middleware(TrashOnlyBindingMiddleware::class);
 
         if ($options->scopeBindings) $route->scopeBindings();
-
     }
 
     private function buildUri(array $segments, array $action, TrashResourceOptions $options): string
@@ -85,7 +80,6 @@ final class TrashResourceRegistrar
             $parts[] = $this->resourceSegment($segment);
 
             if ($index < $lastIndex) $parts[] = '{' . $this->resourceWildcard($segment, $options) . '}';
-
         }
         return implode('/', $parts);
     }
@@ -94,7 +88,6 @@ final class TrashResourceRegistrar
     {
         return trim($segment, '/');
     }
-
 
     private function resourceWildcard(string $segment, TrashResourceOptions $options): string
     {
@@ -139,19 +132,9 @@ final class TrashResourceRegistrar
 
         if ($options->prefix !== '') $attributes['prefix'] = $options->prefix;
 
-
         if ($options->middleware !== []) $attributes['middleware'] = $options->middleware;
 
         return $attributes;
-    }
-
-    private function normalizeResourceName(string $name): string
-    {
-        $name = trim($name, '. /');
-
-        if ($name === '') throw new InvalidArgumentException('Trash resource name cannot be empty.');
-
-        return implode('.', $this->parseResourceSegments($name));
     }
 
     /**

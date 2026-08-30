@@ -17,30 +17,29 @@ class PasswordRule implements ValidationRule
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         if (!is_string($value)) {
-            $fail(__('validation.string' , ['attribute' => $attribute]));
+            $fail(__('validation.string', ['attribute' => $attribute]));
             return;
         }
 
         $message = [];
-        $validation = true;
+
+        if (strlen($value) < 6) {
+            $message[] = __("the password should at least 6 characters");
+        }
         if (!preg_match('/(?=.*?[a-z])/', $value)) {
-            $validation = false;
             $message[] = __("the password should contain at least one lowercase character");
         }
         if (!preg_match('/(?=.*?[A-Z])/', $value)) {
-            $validation = false;
             $message[] = __("the password should contain at least one uppercase character");
         }
         if (!preg_match('/(?=.*?[0-9])/', $value)) {
-            $validation = false;
             $message[] = __("the password should contain at least one number");
         }
         if (!preg_match('/(?=.*?[#?!@$ %^&*-])/', $value)) {
-            $validation = false;
             $message[] = __("the password should contain at least one special characters (#?!@$ %^&*-)");
         }
 
-        if ($validation === false) $fail(implode(", \n", $message));
+        if (count($message) > 0) $fail(implode(", \n", $message));
 
     }
 
