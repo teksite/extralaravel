@@ -9,22 +9,17 @@ use Illuminate\Support\Facades\App;
 class JalaliDateCast implements CastsAttributes
 {
 
-    private string $lang;
 
-    public function __construct()
-    {
-        $this->lang = App::getLocale();
-    }
 
     public function get(Model $model, string $key, mixed $value, array $attributes): mixed
     {
-        if ($this->lang === 'fa' && function_exists('dateToJalali')) return dateToJalali($value);
+        if (app()->getLocale() === 'fa' && function_exists('dateToJalali')) return dateToJalali($value);
         return $value;
     }
 
     public function set(Model $model, string $key, mixed $value, array $attributes): mixed
     {
-        if ($this->lang === 'fa' && $value && function_exists('dateToGregorian')) return dateToGregorian($value);
+        if (app()->getLocale() === 'fa' && $value && function_exists('dateToGregorian')) return dateToGregorian($value);
         return $value ?? now();
 
     }

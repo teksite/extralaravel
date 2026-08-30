@@ -17,7 +17,7 @@ class CodeMeliRule implements ValidationRule
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         if (!$this->isValidIranianNationalCode($value)) {
-            $fail(__(':attribute in not entered correctly or is not match with national code of IRAN' ,['attribute' => $attribute]));
+            $fail(__(':attribute in not entered correctly or is not match with national code of IRAN', ['attribute' => $attribute]));
         }
     }
 
@@ -27,12 +27,14 @@ class CodeMeliRule implements ValidationRule
      */
     private function isValidIranianNationalCode($code): bool
     {
-        $code = (string) $code;
+        $code = (string)$code;
+
+        if (count(array_unique(str_split($code))) === 1) return false;
 
         if (!preg_match('/^\d{10}$/', $code)) return false;
 
         $digits = str_split($code);
-        $check = (int) array_pop($digits);
+        $check = (int)array_pop($digits);
         $sum = 0;
 
         foreach ($digits as $i => $num) {

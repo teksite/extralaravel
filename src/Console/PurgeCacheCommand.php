@@ -5,10 +5,8 @@ namespace Teksite\Extralaravel\Console;
 use Illuminate\Console\Command;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Filesystem\Filesystem;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 use Symfony\Component\Finder\Finder;
 
 class PurgeCacheCommand extends Command

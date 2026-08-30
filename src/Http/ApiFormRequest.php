@@ -11,12 +11,9 @@ class ApiFormRequest extends FormRequest
 
     public function failedValidation(Validator $validator)
     {
-        $exception = $validator->getException();
-        $exc=(new $exception($validator))->errorBag($this->errorBag);
-
         return throw new HttpResponseException(response()->json([
-            'message' => trans('Validation failed.'),
-            'errors' => $exc->errors(),
+            'message' => 'Validation failed.',
+            'errors' => $validator->errors(),
             'status' => 422,
             'data' => [],
         ])->setStatusCode(422));
@@ -24,9 +21,9 @@ class ApiFormRequest extends FormRequest
     }
 
 
-    public function failedAuthorization()
+    public function failedAuthorization(): never
     {
-        return throw new HttpResponseException(response()->json([
+        throw new HttpResponseException(response()->json([
             'message' => 'Forbidden.',
             'errors' => ['auth'=>"Forbidden. You don't have permission"],
             'status' => 403,

@@ -2,8 +2,6 @@
 
 namespace Teksite\Extralaravel;
 
-use Illuminate\Support\Facades\Blade;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Teksite\Extralaravel\Blades\RecursiveDirectives;
@@ -46,6 +44,7 @@ class ExtraLaravelServiceProvider extends ServiceProvider
             SoftDeleteControllerMakeCommand::class,
             LogicMakeCommand::class,
             PurgeCacheCommand::class,
+            StorageCustomLink::class,
         ]);
     }
 

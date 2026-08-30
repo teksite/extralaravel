@@ -4,12 +4,15 @@ namespace Teksite\Extralaravel\Blades;
 
 use Illuminate\Support\Facades\Blade;
 
-class RecursiveDirectives {
+class RecursiveDirectives
+{
 
     public static function recursive(): void
     {
         Blade::directive('recursive', function (string $expression): string {
             [$collection, $item] = array_map('trim', explode(',', trim($expression, '()'), 2));
+            if ($collection === '' || $item === '') throw new \InvalidArgumentException('The @recursive directive expects: @recursive($collection, $item)');
+
             return <<<PHP
 <?php
     \$__recursiveData = {$collection};

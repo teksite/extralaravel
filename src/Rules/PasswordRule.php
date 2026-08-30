@@ -12,34 +12,37 @@ class PasswordRule implements ValidationRule
     /**
      * Run the validation rule.
      *
-     * @param  \Closure(string, ?string=): \Illuminate\Translation\PotentiallyTranslatedString  $fail
+     * @param \Closure(string, ?string=): \Illuminate\Translation\PotentiallyTranslatedString $fail
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        $message=[];
-        $validation=true;
+        if (!is_string($value)) {
+            $fail(__('validation.string' , ['attribute' => $attribute]));
+            return;
+        }
+
+        $message = [];
+        $validation = true;
         if (!preg_match('/(?=.*?[a-z])/', $value)) {
-            $validation=false;
-            $message[]=__("the password should contain at least one lowercase character");
+            $validation = false;
+            $message[] = __("the password should contain at least one lowercase character");
         }
         if (!preg_match('/(?=.*?[A-Z])/', $value)) {
-            $validation=false;
-            $message[]=__("the password should contain at least one uppercase character");
+            $validation = false;
+            $message[] = __("the password should contain at least one uppercase character");
         }
         if (!preg_match('/(?=.*?[0-9])/', $value)) {
-            $validation=false;
-            $message[]=__("the password should contain at least one number");
+            $validation = false;
+            $message[] = __("the password should contain at least one number");
         }
         if (!preg_match('/(?=.*?[#?!@$ %^&*-])/', $value)) {
-            $validation=false;
-            $message[]=__("the password should contain at least one special characters (#?!@$ %^&*-)");
+            $validation = false;
+            $message[] = __("the password should contain at least one special characters (#?!@$ %^&*-)");
         }
 
-        if ($validation ===false) $fail(implode(", \n", $message));
+        if ($validation === false) $fail(implode(", \n", $message));
 
     }
-
-
 
 
 }

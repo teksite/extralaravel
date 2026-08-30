@@ -9,7 +9,6 @@ class StorageCustomLink extends Command
 {
     protected $signature = 'storage:link-custom
                             {--relative : Create relative symbolic links}
-                            {--force : Recreate existing links}
                             {--verify : Verify links after creation}';
 
     protected $description = 'Create custom symbolic links from config(storage.custom_links)';
@@ -69,7 +68,7 @@ class StorageCustomLink extends Command
             } catch (\Throwable $e) {
                 $this->components->twoColumnDetail(
                     "✗ {$key}",
-                    '<fg=green;options=bold>' . $e->getMessage() . '</>'
+                    '<fg=red;options=bold>' . $e->getMessage() . '</>'
                 );
 
                 $failed++;
@@ -131,22 +130,13 @@ class StorageCustomLink extends Command
         }
     }
 
-    private function handleExistingLink(string $link): ?string
+    private function handleExistingLink(string $link)
     {
         if (!file_exists($link) && !is_link($link)) return null;
 
-        if (!$this->option('force')) {
-            if (is_link($link)) return 'skipped';
-            throw new \RuntimeException("Path exists and is not a symbolic link: {$link}");
-        }
+        if (is_link($link)) throw new \RuntimeException("Path exists and is not a symbolic link: {$link}");
 
-        if (is_link($link)) {
-            unlink($link);
-            return null;
-        }
-        File::deleteDirectory($link);
-
-        return null;
+        unlink($link);
     }
 
     private function verifyLinks(array $links): void
