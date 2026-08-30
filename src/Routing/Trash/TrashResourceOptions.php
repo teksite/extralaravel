@@ -77,7 +77,6 @@ final readonly class TrashResourceOptions
         return array_values($middleware);
     }
 
-
     private static function normalizeActions(mixed $actions): ?array
     {
         if ($actions === null) return null;
@@ -111,7 +110,6 @@ final readonly class TrashResourceOptions
         );
     }
 
-
     private static function validateActionConflict(?array $only, array $except): void
     {
         if ($only === null || $except === []) return;
@@ -128,11 +126,9 @@ final readonly class TrashResourceOptions
         );
     }
 
-
     private static function normalizeStringMap(mixed $value, string $name): array
     {
         if (!is_array($value)) throw new InvalidArgumentException("Trash resource {$name} must be an array.");
-
 
         foreach ($value as $key => $item) {
             if (!is_string($key) || !is_string($item)) {
@@ -141,7 +137,6 @@ final readonly class TrashResourceOptions
                 );
             }
         }
-
         return $value;
     }
 }

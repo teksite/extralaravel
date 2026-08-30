@@ -24,7 +24,7 @@ final class TrashResourceDefinition
 
             TrashAction::REINSTATE->value => [
                 'method'  => 'PATCH',
-                'uri'     => 'trash/{id}',
+                'uri'     => 'trash/{resource}',
                 'action'  => 'reinstate',
                 'binding' => true,
 
@@ -32,7 +32,7 @@ final class TrashResourceDefinition
 
             TrashAction::PRUNE->value => [
                 'method'  => 'DELETE',
-                'uri'     => 'trash/{id}',
+                'uri'     => 'trash/{resource}',
                 'action'  => 'prune',
                 'binding' => true,
 
