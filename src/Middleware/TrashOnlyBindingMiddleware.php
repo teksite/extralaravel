@@ -16,15 +16,18 @@ class TrashOnlyBindingMiddleware
 
         if ($route === null) return $next($request);
 
-        foreach ($route->parameters() as $parameter) {
+        $parameters = $route->parameters();
 
-            if (!$parameter instanceof Model) continue;
+        if ($parameters === []) return $next($request);
 
-            if (!in_array(SoftDeletes::class, class_uses_recursive($parameter), true)) {
-                throw (new NotFoundHttpException());
-            }
-            if (!$parameter->trashed()) throw (new NotFoundHttpException());
-        }
+        $target = end($parameters);
+
+        if (!$target instanceof Model) return $next($request);
+
+        if (!in_array(SoftDeletes::class, class_uses_recursive($target), true)) throw new NotFoundHttpException();
+
+        if (!$target->trashed()) throw new NotFoundHttpException();
+
 
         return $next($request);
     }

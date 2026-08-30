@@ -58,7 +58,6 @@ final readonly class TrashResourceOptions
     private static function normalizePrefix(mixed $prefix): string
     {
         if (!is_string($prefix)) throw new InvalidArgumentException('Trash resource prefix must be a string.',);
-
         return trim($prefix, '/');
     }
 
@@ -81,14 +80,23 @@ final readonly class TrashResourceOptions
     {
         if ($actions === null) return null;
 
+        if (is_string($actions) || $actions instanceof BackedEnum) return [self::stringifyAction($actions)];
+
         if (is_string($actions)) return [$actions];
 
         if (!is_array($actions)) throw new InvalidArgumentException('Trash resource actions must be an array.',);
 
         return array_values(array_unique(array_map(
-            static fn(mixed $action): string => (string)$action,
+            static fn(mixed $action): string => self::stringifyAction($action),
             $actions,
         )));
+    }
+
+    private static function stringifyAction(mixed $action): string
+    {
+        if ($action instanceof BackedEnum)  return (string) $action->value;
+        if (is_string($action)) return $action;
+        throw new InvalidArgumentException('Trash resource action must be a string or a BackedEnum.');
     }
 
     private static function validateActions(?array $actions): void
