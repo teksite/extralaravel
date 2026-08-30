@@ -15,38 +15,46 @@ final class TrashResourceDefinition
     {
         return [
             TrashAction::INDEX->value => [
-                'method' => 'GET',
-                'uri' => 'trash',
-                'action' => 'index',
+                'method'  => 'GET',
+                'uri'     => 'trash',
+                'action'  => 'index',
+                'binding' => false,
+
             ],
 
             TrashAction::REINSTATE->value => [
-                'method' => 'PATCH',
-                'uri' => 'trash/{id}',
-                'action' => 'reinstate',
+                'method'  => 'PATCH',
+                'uri'     => 'trash/{id}',
+                'action'  => 'reinstate',
+                'binding' => true,
+
             ],
 
             TrashAction::PRUNE->value => [
-                'method' => 'DELETE',
-                'uri' => 'trash/{id}',
-                'action' => 'prune',
+                'method'  => 'DELETE',
+                'uri'     => 'trash/{id}',
+                'action'  => 'prune',
+                'binding' => true,
+
             ],
 
             TrashAction::RESTORE->value => [
-                'method' => 'PATCH',
-                'uri' => 'trash',
-                'action' => 'restore',
+                'method'  => 'PATCH',
+                'uri'     => 'trash',
+                'action'  => 'restore',
+                'binding' => false,
+
             ],
 
             TrashAction::FLUSH->value => [
-                'method' => 'DELETE',
-                'uri' => 'trash',
-                'action' => 'flush',
+                'method'  => 'DELETE',
+                'uri'     => 'trash',
+                'action'  => 'flush',
+                'binding' => false,
+
             ],
         ];
     }
 
-    private function __construct()
-    {
-    }
+    private function __construct() {}
 }

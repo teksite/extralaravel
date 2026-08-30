@@ -2,6 +2,7 @@
 
 namespace Teksite\Extralaravel\Routing\Trash;
 
+use BackedEnum;
 use InvalidArgumentException;
 
 final readonly class TrashResourceOptions
@@ -23,7 +24,10 @@ final readonly class TrashResourceOptions
         public array  $where,
         public array  $parameters,
         public array  $names,
+        public array  $scoped,
+        public array  $bindingFields,
         public bool   $scopeBindings,
+        public bool   $shallow,
     ) {}
 
     public static function from(array $options): self
@@ -32,6 +36,8 @@ final readonly class TrashResourceOptions
         $except = self::normalizeActions($options['except'] ?? []);
 
         self::validateActionConflict($only, $except);
+        self::validateActions($only);
+        self::validateActions($except);
 
         return new self(
             self::normalizePrefix($options['prefix'] ?? ''),
@@ -39,10 +45,13 @@ final readonly class TrashResourceOptions
             self::normalizeNamePrefix($options['as'] ?? ''),
             $only,
             $except,
-            $options['where'] ?? [],
-            $options['parameters'] ?? [],
-            $options['names'] ?? [],
+            self::normalizeStringMap($options['where'] ?? [], 'where'),
+            self::normalizeStringMap($options['parameters'] ?? [], 'parameters'),
+            self::normalizeStringMap($options['names'] ?? [], 'names'),
+            self::normalizeStringMap($options['scoped'] ?? [], 'scoped'),
+            self::normalizeStringMap($options['bindingFields'] ?? [], 'bindingFields'),
             (bool)($options['scopeBindings'] ?? false),
+            (bool)($options['shallow'] ?? false),
         );
     }
 
@@ -68,12 +77,12 @@ final readonly class TrashResourceOptions
         return array_values($middleware);
     }
 
-    /**
-     * @return array<int, string>|null
-     */
+
     private static function normalizeActions(mixed $actions): ?array
     {
         if ($actions === null) return null;
+
+        if (is_string($actions)) return [$actions];
 
         if (!is_array($actions)) throw new InvalidArgumentException('Trash resource actions must be an array.',);
 
@@ -83,12 +92,56 @@ final readonly class TrashResourceOptions
         )));
     }
 
+    private static function validateActions(?array $actions): void
+    {
+        if ($actions === null) return;
+
+        $available = array_keys(TrashResourceDefinition::actions());
+
+        $invalid = array_diff($actions, $available);
+
+        if ($invalid === []) return;
+
+        throw new InvalidArgumentException(
+            sprintf(
+                'Unknown trash resource action(s): %s. Available actions: %s.',
+                implode(', ', $invalid),
+                implode(', ', $available)
+            )
+        );
+    }
+
+
     private static function validateActionConflict(?array $only, array $except): void
     {
         if ($only === null || $except === []) return;
+
         $conflicts = array_intersect($only, $except);
+
         if ($conflicts === []) return;
 
-        throw new InvalidArgumentException(sprintf('Trash resource actions cannot exist in both only and except: %s.', implode(', ', $conflicts)),);
+        throw new InvalidArgumentException(
+            sprintf(
+                'Trash resource actions cannot exist in both only and except: %s.',
+                implode(', ', $conflicts)
+            )
+        );
+    }
+
+
+    private static function normalizeStringMap(mixed $value, string $name): array
+    {
+        if (!is_array($value)) throw new InvalidArgumentException("Trash resource {$name} must be an array.");
+
+
+        foreach ($value as $key => $item) {
+            if (!is_string($key) || !is_string($item)) {
+                throw new InvalidArgumentException(
+                    "Trash resource {$name} must contain string keys and values."
+                );
+            }
+        }
+
+        return $value;
     }
 }
