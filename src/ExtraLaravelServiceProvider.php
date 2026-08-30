@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Teksite\Extralaravel\Blades\RecursiveDirectives;
 use Teksite\Extralaravel\Console\ApiRequestMakeCommand;
 use Teksite\Extralaravel\Console\PurgeCacheCommand;
 use Teksite\Extralaravel\Console\LogicMakeCommand;
@@ -64,39 +65,8 @@ class ExtraLaravelServiceProvider extends ServiceProvider
         });
     }
 
-
     private function registerRecursiveBladeDirectives(): void
     {
-        Blade::directive('recursive', function (string $expression): string {
-            [$collection, $item] = array_map('trim', explode(',', trim($expression, '()'), 2));
-            return <<<PHP
-<?php
-    \$__recursiveData = {$collection};
-
-    if (is_iterable(\$__recursiveData)):
-        foreach (\$__recursiveData as \${$item}):
-            if (is_iterable(\${$item})):
-                echo \$this->getContainer()
-                    ->make('view')
-                    ->make('recursive', [
-                        '{$item}' => \${$item},
-                    ])
-                    ->render();
-            else:
-?>
-PHP;
-        });
-
-        Blade::directive('endrecursive', function (): string {
-            return <<<'PHP'
-<?php
-            endif;
-        endforeach;
-    endif;
-?>
-PHP;
-        });
+        RecursiveDirectives::recursive();
     }
-
-
 }
