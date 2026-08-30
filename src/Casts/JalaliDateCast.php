@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\App;
 class JalaliDateCast implements CastsAttributes
 {
 
+    private string $lang;
+
     public function __construct()
     {
         $this->lang = App::getLocale();

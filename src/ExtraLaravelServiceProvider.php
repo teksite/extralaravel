@@ -127,34 +127,34 @@ class ExtraLaravelServiceProvider extends ServiceProvider
 
     private function registerRecursiveBladeDirectives(): void
     {
-        Blade::directive('recursive', function ($expression) {
+        Blade::directive('recursive', function (string $expression): string {
+            [$collection, $item] = array_map( 'trim', explode(',', trim($expression, '()'), 2));
+            return <<<PHP
+<?php
+    \$__recursiveData = {$collection};
 
-            [$array, $item] = array_map('trim', explode(',', str_replace(['(', ')'], '', $expression)));
-
-            if (str_contains($array, '(array)')) {
-                $array = str_replace('(array)', '', $array);
-                $arraySource = "(array) \${$array}";
-            } else {
-                $arraySource = "\${$array}";
-            }
-
-            return "<?php
-                if (!isset({$arraySource})) {
-                    echo 'Array is not defined';
-                } elseif (is_array({$arraySource}) || {$arraySource} instanceof \\Traversable) {
-                    foreach ({$arraySource} as \${$item}) {
-                        if (is_array(\${$item}) || \${$item} instanceof \\Traversable) {
-                            echo \$this->view->make('recursive', ['{$array}' => \${$item}, '{$item}' => '{$item}'])->render();
-                        } else {
-                            ?>";
+    if (is_iterable(\$__recursiveData)):
+        foreach (\$__recursiveData as \${$item}):
+            if (is_iterable(\${$item})):
+                echo \$this->getContainer()
+                    ->make('view')
+                    ->make('recursive', [
+                        '{$item}' => \${$item},
+                    ])
+                    ->render();
+            else:
+?>
+PHP;
         });
 
-        Blade::directive('endrecursive', function () {
-            return "<?php
-                        }
-                    }
-                }
-            ?>";
+        Blade::directive('endrecursive', function (): string {
+            return <<<'PHP'
+<?php
+            endif;
+        endforeach;
+    endif;
+?>
+PHP;
         });
     }
 
