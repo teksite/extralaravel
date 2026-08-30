@@ -63,7 +63,7 @@ Add the service provider to the `bootstrap/providers.php` file:
 
 return [
     // Other providers
-    Teksite\Extralaravel\ServiceProvider::class,
+    Teksite\Extralaravel\ExtraLaravelServiceProvider::class,
 ];
 ```
 
@@ -74,7 +74,7 @@ Add the service provider to the `config/app.php` file under the `providers` arra
 ```php
 'providers' => [
     // Other Service Providers
-    Teksite\Extralaravel\ServiceProvider::class,
+    Teksite\Extralaravel\ExtraLaravelServiceProvider::class,
 ],
 ```
 

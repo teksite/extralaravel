@@ -161,13 +161,18 @@ if (!function_exists('arrayToDot')) {
 
 if (!function_exists('dotToArray')) {
     /**
-     * convert dotted string to array
+     * convert dotted string to array bracket syntax (inverse of arrayToDot)
+     *
+     * e.g. "user.address.city" => "user[address][city]"
      */
     function dotToArray(string $name): ?string
     {
-        return str_contains($name, '.')
-            ? preg_replace('/\./', '][', $name) . ']'
-            : $name;
+        if (!str_contains($name, '.'))  return $name;
+
+        $segments = explode('.', $name);
+        $first = array_shift($segments);
+
+        return $first . '[' . implode('][', $segments) . ']';
     }
 }
 

@@ -5,7 +5,6 @@ namespace Teksite\Extralaravel\Http;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
-use Teksite\Lareon\Enums\ResponseType;
 
 class ApiFormRequest extends FormRequest
 {
