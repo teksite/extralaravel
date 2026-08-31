@@ -42,4 +42,16 @@ class SoftDeleteControllerMakeCommand extends GeneratorCommand
         $namespace = $this->rootNamespace() . 'Http\\Controllers';
         return $namespace . '\\' . str_replace('/', '\\', $name);
     }
+
+    /**
+     * Get the console command arguments.
+     *
+     * @return array
+     */
+    protected function getOptions(): array
+    {
+        return [
+            ['api', null, InputOption::VALUE_NONE, 'Exclude the create and edit methods from the trash controller'],
+        ];
+    }
 }
