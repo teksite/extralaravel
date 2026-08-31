@@ -27,7 +27,7 @@ class {{ class }} extends Controller
     /**
      * delete one instance from DB forever
      */
-    public function remove($id): RedirectResponse
+    public function prune($id): RedirectResponse
     {
       //;
     }
