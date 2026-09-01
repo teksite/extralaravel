@@ -43,7 +43,7 @@ class {{ class }} extends Controller
     /**
      * delete all instances forever.
      */
-    public function purge(): RedirectResponse
+    public function flush(): RedirectResponse
     {
         //
     }
