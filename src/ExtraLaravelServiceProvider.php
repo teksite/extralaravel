@@ -9,9 +9,7 @@ use Teksite\Extralaravel\Console\ApiRequestMakeCommand;
 use Teksite\Extralaravel\Console\PurgeCacheCommand;
 use Teksite\Extralaravel\Console\LogicMakeCommand;
 use Teksite\Extralaravel\Console\SoftDeleteControllerMakeCommand;
-use Teksite\Extralaravel\Console\StorageCustomLink;
 use Teksite\Extralaravel\Routing\Trash\PendingTrashResourceRegistration;
-use Teksite\Extralaravel\Routing\Trash\TrashResourceOptions;
 use Teksite\Extralaravel\Routing\Trash\TrashResourceRegistrar;
 
 class ExtraLaravelServiceProvider extends ServiceProvider
@@ -45,7 +43,6 @@ class ExtraLaravelServiceProvider extends ServiceProvider
             SoftDeleteControllerMakeCommand::class,
             LogicMakeCommand::class,
             PurgeCacheCommand::class,
-            StorageCustomLink::class,
         ]);
     }
 

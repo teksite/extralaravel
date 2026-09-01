@@ -23,7 +23,6 @@ A collection of reusable utilities, helpers, casts, validation rules, traits, Ar
 - Soft Delete / Trash Management Trait
 - Custom Artisan Generator Commands
 - Cache Cleanup Command
-- Custom Storage Symbolic Links
 - Honeypot Middleware
 - Recursive Blade Directive
 - Useful Global Helpers
@@ -106,9 +105,6 @@ return [
 
     'data_path' => '/app/data',
 
-    'custom_links' => [
-
-    ],
 
 ];
 ```
@@ -893,67 +889,6 @@ php artisan cache:purge --skip-tokens
 
 ```bash
 php artisan cache:purge --connection=mysql
-```
-
----
-
-## Custom Storage Links
-
-The package provides:
-
-```bash
-php artisan storage:link-custom
-```
-
-This command creates symbolic links defined in the package configuration.
-
-Example:
-
-```php
-'custom_links' => [
-
-    'uploads' => [
-        'link' => public_path('uploads'),
-        'target' => storage_path('app/uploads'),
-    ],
-
-],
-```
-
-Then:
-
-```bash
-php artisan storage:link-custom
-```
-
----
-
-### Force Recreate Links
-
-```bash
-php artisan storage:link-custom --force
-```
-
----
-
-### Relative Links
-
-```bash
-php artisan storage:link-custom --relative
-```
-
----
-
-### Verify Links
-
-```bash
-php artisan storage:link-custom --verify
-```
-
-Options can be combined:
-
-```bash
-php artisan storage:link-custom --force --relative --verify
 ```
 
 ---
