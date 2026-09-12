@@ -7,10 +7,10 @@ if (!function_exists('changeToSlug')) {
     /**
      * convert string to slug
      */
-    function changeToSlug(string $slug, string $separator = '-'): \Illuminate\Support\Stringable
+    function changeToSlug(string $slug, string $separator = '-',): \Illuminate\Support\Stringable
     {
-        $slug = preg_replace_callback('/[A-Z]/', function ($matches) {
-            return ' ' . strtolower($matches[0]);
+        $slug = preg_replace_callback('/[A-Z]/', function ($matches,) {
+            return ' '.strtolower($matches[0]);
         }, $slug);
         $slug = preg_replace('/[áàảạãăắằẳẵặâấầẩẫậ]/', 'a', $slug);
         $slug = preg_replace('/[éèẻẽẹêếềểễệ]/', 'e', $slug);
@@ -28,7 +28,7 @@ if (!function_exists('toEnglishNumber')) {
     /**
      * Convert arabic and persian numbers to english numbers
      */
-    function toEnglishNumber(string $value): string
+    function toEnglishNumber(string $value,): string
     {
         return strtr($value, [
             '۰' => '0',
@@ -60,7 +60,7 @@ if (!function_exists('normalizePersianText')) {
     /**
      * Convert arabic letters to persian
      */
-    function normalizePersianText(?string $string): null|string
+    function normalizePersianText(?string $string,): null|string
     {
         if ($string === null) return null;
         $arabic_to_persian_map = [
@@ -80,7 +80,7 @@ if (!function_exists('convertSeconds')) {
      * convert second to hour-minute-second
      * format parameter can be array to return arrays of values carbon format
      */
-    function convertSeconds(?int $seconds = null, ?string $format = 'string'): string|array
+    function convertSeconds(?int $seconds = null, ?string $format = 'string',): string|array
     {
         if ($seconds === null) return "00:00:00";
 
@@ -114,22 +114,22 @@ if (!function_exists('exploding')) {
     /**
      * explode string by "," and "،"
      */
-    function exploding(?string $string): ?\Illuminate\Support\Collection
+    function exploding(?string $string,): ?\Illuminate\Support\Collection
     {
         if ($string === null) return null;
         return collect(explode(',', $string))
-            ->flatMap(fn($item) => explode('،', trim($item)))
-            ->map(fn($item) => trim($item));
+            ->flatMap(fn($item,) => explode('،', trim($item)))
+            ->map(fn($item,) => trim($item));
     }
 }
 
 if (!function_exists('var_export_short')) {
     /**
-     * @param $expression
+     * @param      $expression
      * @param bool $return
      * @return array|string|string[]|void|null
      */
-    function var_export_short($expression, bool $return = false)
+    function var_export_short($expression, bool $return = false,)
     {
 
         $export = var_export($expression, true);
@@ -149,7 +149,7 @@ if (!function_exists('arrayToDot')) {
     /**
      * convert array to dot syntax
      */
-    function arrayToDot(string $name): ?string
+    function arrayToDot(string $name,): ?string
     {
         $dottedName = str_contains($name, '[')
             ? preg_replace(['/\[/', '/\]/'], ['.', ''], $name)
@@ -165,14 +165,14 @@ if (!function_exists('dotToArray')) {
      *
      * e.g. "user.address.city" => "user[address][city]"
      */
-    function dotToArray(string $name): ?string
+    function dotToArray(string $name,): ?string
     {
-        if (!str_contains($name, '.'))  return $name;
+        if (!str_contains($name, '.')) return $name;
 
         $segments = explode('.', $name);
         $first = array_shift($segments);
 
-        return $first . '[' . implode('][', $segments) . ']';
+        return $first.'['.implode('][', $segments).']';
     }
 }
 
@@ -180,7 +180,7 @@ if (!function_exists('normalizePath')) {
     /**
      * normalize path directory
      */
-    function normalizePath(string $path): string
+    function normalizePath(string $path,): string
     {
         $normalizedPath = str_replace(['/', '\\', '/\\', '\\/'], DIRECTORY_SEPARATOR, $path);
 
@@ -192,14 +192,14 @@ if (!function_exists('is_rtl')) {
     /**
      * Determines if a given language uses right-to-left (RTL) script.
      */
-    function is_rtl(?string $language = null): bool
+    function is_rtl(?string $language = null,): bool
     {
         $language ??= app()->getLocale();
 
         return in_array(
             $language,
-            ['ar', 'fa', 'he', 'ur', 'ps', 'ku', 'sd', 'yi'],
-            true
+            config('extralaravel.rtl_locales' ,[]),
+            true,
         );
 
     }
@@ -207,7 +207,7 @@ if (!function_exists('is_rtl')) {
 
 if (!function_exists('get_error')) {
 
-    function get_error(MessageBag $errors, string $name): array
+    function get_error(MessageBag $errors, string $name,): array
     {
         return $errors->get(arrayToDot($name));
     }
@@ -221,11 +221,11 @@ if (!function_exists('getStaticData')) {
      * getStaticData('app.data.times.iran.tehran');
      *
      * @param string $key
-     * @param mixed $default
+     * @param mixed  $default
      * @param string $prePath
      * @return mixed
      */
-    function getStaticData(string $key, mixed $default = null, string $prePath = ''): mixed
+    function getStaticData(string $key, mixed $default = null, string $prePath = '',): mixed
     {
         $prePath = trim(str_replace(['/', '\\'], '.', $prePath), '.');
 
@@ -271,7 +271,7 @@ if (!function_exists('getStaticData')) {
             foreach ($segments as $index => $segment) {
                 $fileSegments[] = $segment;
 
-                $candidate = base_path(implode(DIRECTORY_SEPARATOR, $fileSegments) . '.php');
+                $candidate = base_path(implode(DIRECTORY_SEPARATOR, $fileSegments).'.php');
 
                 $realPath = realpath($candidate);
 
@@ -287,7 +287,7 @@ if (!function_exists('getStaticData')) {
 
                 $file = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $realPath);
 
-                if ($file !== $base && !str_starts_with($file, $base . DIRECTORY_SEPARATOR)) {
+                if ($file !== $base && !str_starts_with($file, $base.DIRECTORY_SEPARATOR)) {
                     return $default;
                 }
 

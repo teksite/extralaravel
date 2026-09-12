@@ -12,13 +12,13 @@ class JalaliDateCast implements CastsAttributes
 
     public function get(Model $model, string $key, mixed $value, array $attributes): mixed
     {
-        if (app()->getLocale() === 'fa' && function_exists('dateToJalali')) return dateToJalali($value);
+        if (in_array(app()->getLocale() ,config('extralaravel.jalalit_date_locals',[])) && function_exists('dateToJalali')) return dateToJalali($value);
         return $value;
     }
 
     public function set(Model $model, string $key, mixed $value, array $attributes): mixed
     {
-        if (app()->getLocale() === 'fa' && $value && function_exists('dateToGregorian')) return dateToGregorian($value);
+        if (in_array(app()->getLocale() ,config('extralaravel.jalalit_date_locals',[])) && $value && function_exists('dateToGregorian')) return dateToGregorian($value);
         return $value ?? now();
 
     }
