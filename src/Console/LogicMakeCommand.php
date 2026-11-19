@@ -4,39 +4,28 @@ namespace Teksite\Extralaravel\Console;
 
 use Illuminate\Console\GeneratorCommand;
 use Illuminate\Support\Str;
+use Symfony\Component\Console\Input\InputOption;
+use Teksite\Extralaravel\Console\Concerns\ResolvesStubs;
 
 class LogicMakeCommand extends GeneratorCommand
 {
 
+    use ResolvesStubs;
+
     protected $name = 'make:logic';
 
-    protected $description = 'Create a new logic class (for repository pattern) to use DB query and other logical process';
+    protected $description = 'Create a reusable class for encapsulating application logic and handling processing operations across different parts of the application';
+
+    protected $type = 'Logic';
 
     protected function getStub(): string
     {
-        return __DIR__.'/../stubs/logic-class.stub';
+        return $this->resolveStubPath('logic-class.stub');
     }
 
-
-    protected function getPath($name): string
+    protected function getDefaultNamespace($rootNamespace): string
     {
-        $baseDir =  base_path('app/Logics');
-
-        $relativePath = Str::replaceFirst($baseDir, '', $name);
-        $absolutePath=base_path($relativePath);
-        return str_replace('\\', '/', $absolutePath) . '.php';
+        return $rootNamespace . '\\Logics';
     }
 
-    /**
-     *
-     * @param string $name
-     * @return string
-     */
-    protected function qualifyClass($name): string
-    {
-        $name = ltrim($name, '\\/');
-
-        $namespace =  $this->rootNamespace() . 'Logics';
-        return $namespace . '\\' . str_replace('/', '\\', $name);
-    }
 }

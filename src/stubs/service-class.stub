@@ -1,0 +1,32 @@
+<?php
+
+namespace {{ namespace }};
+
+use Illuminate\Support\Arr;
+
+class {{ class }}
+{
+    /**
+     * Create a new service instance.
+     */
+    public function __construct()
+    {
+        //
+    }
+
+    /**
+     * Execute the service operation.
+     */
+    public function execute(): mixed
+    {
+        //
+    }
+
+    /**
+     * Handle the service operation.
+     */
+    public function handle(): mixed
+    {
+        //
+    }
+}

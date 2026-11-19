@@ -6,52 +6,38 @@ use Illuminate\Console\GeneratorCommand;
 
 use Illuminate\Support\Str;
 use Symfony\Component\Console\Input\InputOption;
+use Teksite\Extralaravel\Console\Concerns\ResolvesStubs;
 
 class SoftDeleteControllerMakeCommand extends GeneratorCommand
 {
+    use ResolvesStubs;
 
     protected $name = 'make:controller-trash';
 
     protected $description = 'Create a new controller for soft deleted entities.';
 
+    protected $type = 'Controller';
+
     protected function getStub(): string
     {
-        return __DIR__ . '/../stubs/' . ($this->option('api')
-                ? 'trash-resource-controller-api.stub'
-                :'trash-resource-controller.stub');
+        return $this->resolveStubPath(
+            $this->option('api') ? 'trash-resource-controller-api.stub' : 'trash-resource-controller.stub',
+        );
     }
 
-    protected function getPath($name): string
+    protected function getDefaultNamespace($rootNamespace): string
     {
-        $baseDir = base_path('app/Http/Controllers');
-
-        $relativePath = Str::replaceFirst($baseDir, '', $name);
-        $absolutePath = base_path($relativePath);
-        return str_replace('\\', '/', $absolutePath) . '.php';
+        return $rootNamespace . '\\Http\\Controllers';
     }
 
     /**
-     *
-     * @param string $name
-     * @return string
-     */
-    protected function qualifyClass($name): string
-    {
-        $name = ltrim($name, '\\/');
-
-        $namespace = $this->rootNamespace() . 'Http\\Controllers';
-        return $namespace . '\\' . str_replace('/', '\\', $name);
-    }
-
-    /**
-     * Get the console command arguments.
-     *
-     * @return array
+     * @return array<int, array<int, mixed>>
      */
     protected function getOptions(): array
     {
         return [
-            ['api', null, InputOption::VALUE_NONE, 'Exclude the create and edit methods from the trash controller'],
+            ['api', null, InputOption::VALUE_NONE, 'Generate a JSON (API) controller'],
+            ['force', 'f', InputOption::VALUE_NONE, 'Create the class even if it already exists'],
         ];
     }
 }

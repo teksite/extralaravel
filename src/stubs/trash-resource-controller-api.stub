@@ -2,14 +2,13 @@
 
 namespace {{ namespace }};
 
-use App\Http\Controllers\Controller;
+use {{ rootNamespace }}Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 
 class {{ class }} extends Controller
 {
-
     /**
-     * Display  a list of the resource.
+     * Display a list of the trashed resources.
      */
     public function index(): JsonResponse
     {
@@ -17,36 +16,34 @@ class {{ class }} extends Controller
     }
 
     /**
-     * restore one instance from trash
+     * Restore one instance from the trash.
      */
-    public function reinstate($id): JsonResponse
+    public function reinstate(int|string $id): JsonResponse
     {
         //
     }
 
     /**
-     * delete one instance from DB forever
+     * Permanently delete one instance from the trash.
      */
-    public function prune($id): JsonResponse
+    public function prune(int|string $id): JsonResponse
     {
-      //;
+        //
     }
 
     /**
-     *  restore all instances.
+     * Restore all instances from the trash.
      */
     public function restore(): JsonResponse
     {
-       //
+        //
     }
 
     /**
-     * delete all instances forever.
+     * Permanently delete all instances from the trash.
      */
     public function flush(): JsonResponse
     {
         //
     }
-
-
 }

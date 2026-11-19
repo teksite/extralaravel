@@ -2,46 +2,47 @@
 
 namespace {{ namespace }};
 
-use App\Http\Controllers\Controller;
+use {{ rootNamespace }}Http\Controllers\Controller;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 
 class {{ class }} extends Controller
 {
 
     /**
-     * Display  a list of the resource.
+     * Display a list of the trashed resources.
      */
-    public function index(): \Illuminate\Contracts\View\View
+    public function index(): View
     {
         //
     }
 
     /**
-     * restore one instance from trash
+     * Restore one instance from the trash.
      */
-    public function reinstate($id): RedirectResponse
+    public function reinstate(int|string $id): RedirectResponse
     {
         //
     }
 
     /**
-     * delete one instance from DB forever
+     * Permanently delete one instance from the trash.
      */
-    public function prune($id): RedirectResponse
+    public function prune(int|string $id): RedirectResponse
     {
-      //;
+        //
     }
 
     /**
-     *  restore all instances.
+     * Restore all instances from the trash.
      */
     public function restore(): RedirectResponse
     {
-       //
+        //
     }
 
     /**
-     * delete all instances forever.
+     * Permanently delete all instances from the trash.
      */
     public function flush(): RedirectResponse
     {
