@@ -4,16 +4,16 @@ namespace Teksite\Extralaravel\Rules;
 
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
-use Illuminate\Support\Str;
-use Illuminate\Translation\PotentiallyTranslatedString;
 use InvalidArgumentException;
 use Teksite\Extralaravel\Enums\MobilePatterns;
 
 class MobileRule implements ValidationRule
 {
     /**
-     * Longest accepted raw input. Real numbers are far shorter, so this only rejects abusive payloads
-     * before any normalization work happens.
+     * Longest accepted raw input.
+     *
+     * Real mobile numbers are significantly shorter, so this limit
+     * prevents unnecessary normalization work on abusive payloads.
      */
     private const int MAX_INPUT_LENGTH = 32;
 
@@ -29,13 +29,17 @@ class MobileRule implements ValidationRule
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (!is_string($value) || trim($value) === '' || strlen($value) > self::MAX_INPUT_LENGTH) {
+        if (
+            ! is_string($value)
+            || trim($value) === ''
+            || strlen($value) > self::MAX_INPUT_LENGTH
+        ) {
             $fail($this->invalidMessage())->translate();
 
+            return;
         }
 
         $normalized = MobilePatterns::normalize($value);
-
 
         foreach ($this->countries as $country) {
             if ($country->matches($normalized)) {
@@ -43,16 +47,13 @@ class MobileRule implements ValidationRule
             }
         }
 
-        $fail('The :attribute must be a valid mobile number for: :countries')->translate([
-            'countries' => implode(', ', array_map(
-                static fn(MobilePatterns $country): string => $country->label(),
-                $this->countries,
-            )),
-        ]);
-
-        $allowedCountries = implode(', ', array_map(fn(MobilePatterns $country) => $country->label(), $this->countries));
-
-        $fail(__("The :attribute must be a valid mobile number for: :countries", ['attribute' => $attribute, 'countries' => $allowedCountries,]));
+        $fail('The :attribute must be a valid mobile number for: :countries')
+            ->translate([
+                'countries' => implode(', ', array_map(
+                    static fn (MobilePatterns $country): string => $country->label(),
+                    $this->countries,
+                )),
+            ]);
     }
 
     /**
@@ -64,7 +65,6 @@ class MobileRule implements ValidationRule
             ? 'validation.mobile'
             : 'The :attribute must be a valid mobile number.';
     }
-
 
     /**
      * @param MobilePatterns|string|array<int, MobilePatterns|string> $countries
