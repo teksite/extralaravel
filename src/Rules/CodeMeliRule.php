@@ -4,94 +4,68 @@ namespace Teksite\Extralaravel\Rules;
 
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Translation\PotentiallyTranslatedString;
+use Teksite\Extralaravel\Support\Digits;
 
 class CodeMeliRule implements ValidationRule
 {
+
+    private const int LENGTH = 10;
+
     /**
-     * Validate the given value.
+     * Validate an Iranian national code (Code Melli).
      *
-     * @param Closure(string): void $fail
+     * @param Closure(string, ?string=): PotentiallyTranslatedString $fail
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         if (!is_string($value) && !is_int($value)) {
-            $fail(__('validation.string', ['attribute' => $attribute,]));
-            return;
-        }
-
-        $code = $this->normalize($value);
-
-        if ($code === '') {
-            $fail(__('validation.required', ['attribute' => $attribute,]));
-            return;
-        }
-
-        if (!$this->isValidIranianNationalCode($code)) {$fail(__('validation.invalid_national_code', ['attribute' => $attribute,]));
+            $fail('validation.string')->translate();
 
             return;
         }
+
+        if (!$this->isValidNationalCode($this->normalize($value))) {
+            $fail($this->invalidMessage())->translate();
+        }
+
+
     }
 
     /**
-     * Normalize the national code.
+     * Prefer the application's own "validation.invalid_national_code" translation when it exists.
      */
+    private function invalidMessage(): string
+    {
+        return trans()->has('validation.invalid_national_code')
+            ? 'validation.invalid_national_code'
+            : 'The :attribute must be a valid Iranian national code.';
+    }
+
     private function normalize(string|int $value): string
     {
-        $value = (string) $value;
+        if (is_int($value)) return str_pad((string) $value, self::LENGTH, '0', STR_PAD_LEFT);
 
-        // Convert Arabic and Persian digits to English digits.
-        $value = strtr($value, [
-            '٠' => '0',
-            '١' => '1',
-            '٢' => '2',
-            '٣' => '3',
-            '٤' => '4',
-            '٥' => '5',
-            '٦' => '6',
-            '٧' => '7',
-            '٨' => '8',
-            '٩' => '9',
-
-            '۰' => '0',
-            '۱' => '1',
-            '۲' => '2',
-            '۳' => '3',
-            '۴' => '4',
-            '۵' => '5',
-            '۶' => '6',
-            '۷' => '7',
-            '۸' => '8',
-            '۹' => '9',
-        ]);
-
-        return trim($value);
+        return trim(Digits::toEnglish($value));
     }
 
-    /**
-     * Determine whether the given value is a valid Iranian national code.
-     */
-    private function isValidIranianNationalCode(string $code): bool
+    private function isValidNationalCode(string $code): bool
     {
-        if (!preg_match('/^\d{10}$/', $code)) return false;
+        if (preg_match('/^\d{10}$/', $code) !== 1) return false;
 
-        if (count(array_unique(str_split($code))) === 1) return false;
+        // Codes made of a single repeated digit pass the checksum but are never issued.
+        if (preg_match('/^(\d)\1{9}$/', $code) === 1)  return false;
 
-        $digits = str_split($code);
-
-        $checkDigit = (int) array_pop($digits);
 
         $sum = 0;
 
-        foreach ($digits as $index => $digit) {
-            $sum += (int) $digit * (10 - $index);
+        for ($index = 0; $index < 9; $index++) {
+            $sum += (int) $code[$index] * (10 - $index);
         }
 
         $remainder = $sum % 11;
+        $expectedCheckDigit = $remainder < 2 ? $remainder : 11 - $remainder;
 
-        $expectedCheckDigit = $remainder < 2
-            ? $remainder
-            : 11 - $remainder;
-
-        return $checkDigit === $expectedCheckDigit;
+        return (int) $code[9] === $expectedCheckDigit;
     }
 }
