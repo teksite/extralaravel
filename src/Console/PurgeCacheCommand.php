@@ -44,7 +44,16 @@ class PurgeCacheCommand extends Command
     {
         $dryRun = (bool) $this->option('dry-run');
 
-        if (!$dryRun && !$this->confirmToProceed()) return self::FAILURE;
+        if (
+            !$dryRun &&
+            !$this->confirmToProceed(
+                'Are you sure you want to run this command?',
+                fn (): bool => $this->laravel->environment('production')
+            )
+        ) {
+            return self::FAILURE;
+        }
+
 
         $start = microtime(true);
 
