@@ -10,17 +10,17 @@ final readonly class TrashResourceOptions
 
     private function __construct(
         public string $prefix,
-        public array  $middleware,
+        public array $middleware,
         public string $namePrefix,
         public ?array $only,
-        public array  $except,
-        public array  $where,
-        public array  $parameters,
-        public array  $names,
-        public array  $scoped,
-        public array  $bindingFields,
-        public bool   $scopeBindings,
-        public bool   $shallow,
+        public array $except,
+        public array $where,
+        public array $parameters,
+        public array $names,
+        public array $scoped,
+        public array $bindingFields,
+        public bool $scopeBindings,
+        public bool $shallow,
     ) {}
 
     public static function from(array $options): self
@@ -85,7 +85,7 @@ final readonly class TrashResourceOptions
 
     private static function stringifyAction(mixed $action): string
     {
-        if ($action instanceof BackedEnum)  return (string) $action->value;
+        if ($action instanceof BackedEnum) return (string)$action->value;
         if (is_string($action)) return $action;
         throw new InvalidArgumentException('Trash resource action must be a string or a BackedEnum.');
     }

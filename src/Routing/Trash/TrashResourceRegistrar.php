@@ -48,10 +48,10 @@ final class TrashResourceRegistrar
 
         if ($options->bindingFields !== []) $route->setBindingFields($options->bindingFields);
 
-        $route->withTrashed();
-
-        $route->middleware(TrashOnlyBindingMiddleware::class);
-
+        if ($action['binding']) {
+            $route->withTrashed();
+            $route->middleware(TrashOnlyBindingMiddleware::class.':'.$this->resourceParameter(end($segments), $options));
+        }
         if ($options->scopeBindings) $route->scopeBindings();
     }
 
@@ -59,14 +59,12 @@ final class TrashResourceRegistrar
     {
         $lastSegment = end($segments);
 
-        if ($options->shallow && count($segments) > 1 && $action['binding']) {
-            $resourceUri = $this->resourceSegment($lastSegment);
-        } else {
-            $resourceUri = $this->nestedResourceUri($segments, $options);
-        }
+        $resourceUri = $options->shallow && count($segments) > 1 && $action['binding']
+            ? $this->resourceSegment($lastSegment)
+            : $this->nestedResourceUri($segments, $options);
 
         $wildcard = $this->resourceWildcard($lastSegment, $options);
-        $actionUri = str_replace('{resource}', '{' . $wildcard . '}', $action['uri']);
+        $actionUri = str_replace('{resource}', '{'.$wildcard.'}', $action['uri']);
 
         return trim("{$resourceUri}/{$actionUri}", '/');
     }
@@ -79,7 +77,7 @@ final class TrashResourceRegistrar
         foreach ($segments as $index => $segment) {
             $parts[] = $this->resourceSegment($segment);
 
-            if ($index < $lastIndex) $parts[] = '{' . $this->resourceWildcard($segment, $options) . '}';
+            if ($index < $lastIndex) $parts[] = '{'.$this->resourceWildcard($segment, $options).'}';
         }
         return implode('/', $parts);
     }
@@ -121,7 +119,7 @@ final class TrashResourceRegistrar
             return trim($options->names[$actionName], '.');
         }
 
-        $prefix = $options->namePrefix !== '' ? $options->namePrefix . '.' : '';
+        $prefix = $options->namePrefix !== '' ? $options->namePrefix.'.' : '';
 
         return "{$prefix}{$resourceName}.trash.{$actionName}";
     }

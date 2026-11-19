@@ -50,15 +50,12 @@ class ExtraLaravelServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        $this->bootCommands();
-
         $this->registerTrashResourceMacro();
-
         $this->registerBladeDirectives();
         $this->registerMiddlewareAliases();
-
-
         $this->bootPublishingFiles();
+        $this->bootCommands();
+
     }
 
     private function bootPublishingFiles(): void
