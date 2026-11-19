@@ -35,6 +35,4 @@ final class NestedLeaves
             yield from self::of($item, $remainingDepth - 1);
         }
     }
-
-    private function __construct() {}
 }

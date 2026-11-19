@@ -38,5 +38,4 @@ final class Honeypot
         ));
     }
 
-    private function __construct() {}
 }
