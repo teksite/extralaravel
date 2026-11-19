@@ -3,7 +3,6 @@
 namespace Teksite\Extralaravel\Console;
 
 use Illuminate\Console\Command;
-use Illuminate\Console\ConfirmableTrait;
 use Illuminate\Database\Connection;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\DB;
@@ -13,7 +12,6 @@ use Throwable;
 
 class PurgeCacheCommand extends Command
 {
-    use ConfirmableTrait;
 
     protected $signature = 'cache:purge
         {--store=database : Name of the database cache store to purge}
@@ -46,11 +44,12 @@ class PurgeCacheCommand extends Command
 
         if (
             !$dryRun &&
-            !$this->confirmToProceed(
-                'Are you sure you want to run this command?',
-                fn (): bool => $this->laravel->environment('production')
-            )
+            $this->laravel->environment('production') &&
+            !$this->option('force') &&
+            !$this->confirm('Are you sure you want to run this command?', false)
         ) {
+            $this->components->warn('Command cancelled.');
+
             return self::FAILURE;
         }
 
