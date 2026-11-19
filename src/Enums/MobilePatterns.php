@@ -3,6 +3,7 @@
 namespace Teksite\Extralaravel\Enums;
 
 use Illuminate\Support\Str;
+use Teksite\Extralaravel\Support\Digits;
 
 enum MobilePatterns
 {
@@ -49,35 +50,32 @@ enum MobilePatterns
         };
     }
 
+    /**
+     * Normalize the raw input and test it against this country's pattern.
+     */
     public function validate(string $phone): bool
     {
-        return (bool)preg_match($this->pattern(), self::normalize($phone));
+        return $this->matches(self::normalize($phone));
     }
 
     /**
-     * Normalize phone number
+     * Test an already normalized number against this country's pattern.
+     *
+     * Use this when checking several countries so the input is normalized only once.
+     */
+    public function matches(string $normalizedPhone): bool
+    {
+        return preg_match($this->pattern(), $normalizedPhone) === 1;
+    }
+
+    /**
+     * Convert digits to English, drop every character except digits and "+", and turn a leading "00" into "+".
      */
     public static function normalize(string $phone): string
     {
-        $phone = trim($phone);
+        $phone = preg_replace('/[^\d+]/', '', Digits::toEnglish(trim($phone))) ?? '';
 
-        $phone = str_replace(
-            ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'],
-            ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
-            $phone
-        );
-
-        $phone = str_replace(
-            ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'],
-            ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
-            $phone
-        );
-
-        $phone = preg_replace('/[^\d+]/', '', $phone);
-
-        if (str_starts_with($phone, '00')) {
-            $phone = '+' . substr($phone, 2);
-        }
+        if (str_starts_with($phone, '00')) return '+' . substr($phone, 2);
 
         return $phone;
     }
@@ -88,25 +86,31 @@ enum MobilePatterns
         $country = strtoupper(str_replace([' ', '-'], '_', trim($country)));
 
         foreach (self::cases() as $case) {
-            if ($case->name === $country) {
-                return $case;
-            }
+            if ($case->name === $country)return $case;
         }
+
         return null;
     }
 
     public static function validateWithCountry(string $phone, string|self $country): bool
     {
         $country = is_string($country) ? self::country($country) : $country;
+
         return $country?->validate($phone) ?? false;
     }
 
+    /**
+     * Detect the first country whose pattern matches the number.
+     *
+     * Numbers without an international prefix can match several countries, and the USA and Canada
+     * share one pattern, so the first matching case (declaration order) wins.
+     */
     public static function detectCountry(string $phone): ?self
     {
         $phone = self::normalize($phone);
 
         foreach (self::cases() as $country) {
-            if ($country->validate($phone)) {
+            if ($country->matches($phone)) {
                 return $country;
             }
         }
@@ -114,41 +118,28 @@ enum MobilePatterns
         return null;
     }
 
+    /**
+     * Convert a number to its digits-only international form (e.g. "09121234567" => "989121234567").
+     *
+     * Numbers that already carry an international prefix are validated and returned without the "+".
+     * National numbers require $country to know which prefix to add.
+     */
     public static function canonical(string $phone, string|self|null $country = null): ?string
     {
         $phone = self::normalize($phone);
 
+        if (str_starts_with($phone, '+'))  return self::detectCountry($phone) === null ? null : substr($phone, 1);
+
         $country = is_string($country) ? self::country($country) : $country;
 
-        if (str_starts_with($phone, '+')) {
-            $phone = substr($phone, 1);
-            $detected = self::detectCountry('+' . $phone);
-
-            if (!$detected) return null;
-            return $phone;
-        }
-
-        if (str_starts_with($phone, '00')) {
-            $phone = substr($phone, 2);
-            $detected = self::detectCountry('+' . $phone);
-
-            if (!$detected) return null;
-            return $phone;
-        }
-
-        if (!$country)  return null;
+        if ($country === null || !$country->matches($phone)) return null;
 
 
-        if (!$country->validate($phone))   return null;
-
-
-        $phone = ltrim($phone, '0');
-
-        return $country->code() . $phone;
+        return $country->code() . ltrim($phone, '0');
     }
 
     /**
-     * Country Name
+     * Country name.
      */
     public function label(): string
     {

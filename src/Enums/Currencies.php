@@ -5,6 +5,8 @@ namespace Teksite\Extralaravel\Enums;
 enum Currencies: string
 {
     case IRR = "Iranian Rial";
+    case USD = "US Dollar";
+    case EUR = "Euro";
     case AFA = "Afghan Afghani";
     case ALL = "Albanian Lek";
     case DZD = "Algerian Dinar";
@@ -57,7 +59,6 @@ enum Currencies: string
     case ERN = "Eritrean Nakfa";
     case EEK = "Estonian Kroon";
     case ETB = "Ethiopian Birr";
-    case EUR = "Euro";
     case FKP = "Falkland Islands Pound";
     case FJD = "Fijian Dollar";
     case GMD = "Gambian Dalasi";
@@ -164,10 +165,9 @@ enum Currencies: string
     case UAH = "Ukrainian Hryvnia";
     case AED = "United Arab Emirates Dirham";
     case UYU = "Uruguayan Peso";
-    case USD = "US Dollar";
     case UZS = "Uzbekistan Som";
     case VUV = "Vanuatu Vatu";
-    case VEF = "Venezuelan BolÃvar";
+    case VEF = "Venezuelan Bolívar";
     case VND = "Vietnamese Dong";
     case YER = "Yemeni Rial";
     case ZMK = "Zambian Kwacha";

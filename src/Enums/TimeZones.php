@@ -2,6 +2,11 @@
 
 namespace Teksite\Extralaravel\Enums;
 
+use DateTimeImmutable;
+use DateTimeInterface;
+use DateTimeZone;
+use Exception;
+
 enum TimeZones
 {
     case Asia_Tehran;
@@ -53,7 +58,7 @@ enum TimeZones
     case America_Tegucigalpa;
     case America_Winnipeg;
     case Canada_Central;
-    case Canada_East_Saskatchewa;
+    case Canada_East_Saskatchewan;
     case Canada_Saskatchewan;
     case Chile_EasterIsland;
     case Mexico_General;
@@ -382,7 +387,7 @@ enum TimeZones
     case Australia_North;
     case Australia_South;
     case Australia_Yancowinna;
-    case Antarctica_DumontDUrvil;
+    case Antarctica_DumontDUrville;
     case Asia_Sakhalin;
     case Asia_Vladivostok;
     case Australia_ACT;
@@ -809,13 +814,72 @@ enum TimeZones
         'Asia/Kamchatka'            => '+12:00',
     ];
 
+
+    /**
+     * @return list<string>
+     */
+    public static function allZones(): array
+    {
+        return array_keys(self::TIMES);
+    }
+
+
+    /**
+     * @return list<string>
+     */
+    public static function allTimes(): array
+    {
+        return array_values(array_unique(array_values(self::TIMES)));
+    }
+
+
+    /**
+     * Get the standard (non-DST) offset from the static table, e.g. "+3:30".
+     *
+     * The table never changes during the year, so zones that observe daylight saving time report
+     * the offset valid outside DST. Use getCurrentOffset() for the offset in effect at a given moment.
+     */
+    public static function getOffset(string|self $zone): ?string
+    {
+        return self::TIMES[self::resolveKey($zone)] ?? null;
+    }
+
+
+    /**
+     * Get the offset in effect at the given moment (now by default), including daylight saving time.
+     *
+     * Uses the PHP timezone database and falls back to the standard offset for legacy zone names that
+     * the installed database does not know.
+     */
+    public static function getCurrentOffset(string|self $zone, ?DateTimeInterface $at = null): ?string
+    {
+        $key = self::resolveKey($zone);
+
+        try {
+            $seconds = (new DateTimeZone($key))->getOffset($at ?? new DateTimeImmutable());
+        } catch (Exception) {
+            return self::TIMES[$key] ?? null;
+        }
+
+        $absolute = abs($seconds);
+
+        return sprintf('%s%d:%02d', $seconds < 0 ? '-' : '+', intdiv($absolute, 3600), intdiv($absolute % 3600, 60));
+    }
+
+    private static function resolveKey(string|self $zone): string
+    {
+        if ($zone instanceof self) return self::toSlash($zone->name);
+
+        return str_contains($zone, '/') ? $zone : self::toSlash($zone);
+    }
+
     /**
      * @param string $zone
      * @return string
      */
     private static function toSlash(string $zone): string
     {
-        return preg_replace('/_/', '/', $zone, 1);
+        return preg_replace('/_/', '/', $zone, 1) ?? $zone;
     }
 
     /**
@@ -826,36 +890,4 @@ enum TimeZones
     {
         return str_replace('/', '_', $zone);
     }
-
-    /**
-     * @return array
-     */
-    public static function allZones(): array
-    {
-        return array_keys(self::TIMES);
-    }
-
-    /**
-     * @return array
-     */
-    public static function allTimes(): array
-    {
-        return array_unique(array_values(self::TIMES));
-    }
-
-
-    /**
-     * @param string|TimeZones $zone
-     * @return string|null
-     */
-    public static function getOffset(string|self $zone): ?string
-    {
-        $key = $zone instanceof self
-            ? self::toSlash($zone->name)
-            : (str_contains($zone, '/') ? $zone : self::toSlash($zone));
-
-        return self::TIMES[$key] ?? null;
-    }
-
-
 }
