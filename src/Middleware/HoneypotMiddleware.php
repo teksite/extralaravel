@@ -4,21 +4,31 @@ namespace Teksite\Extralaravel\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Teksite\Extralaravel\Support\Honeypot;
 
 class HoneypotMiddleware
 {
 
+    private const int DEFAULT_STATUS = 403;
+
     public function handle(Request $request, Closure $next)
     {
-        $config = config('extralaravel.honeypot');
-        if (!isset($config['enabled']) || $config['enabled'] === false) return $next($request);
+        $config = (array)config('extralaravel.honeypot', []);
 
-        $field = $config['field_name'] ?? 'honeypot';
-        $status = $config['status'] ?? 403;
+        if (!($config['enabled'] ?? false)) return $next($request);
 
-        if ($request->filled($field)) abort($status);
+        if ($request->filled(Honeypot::fieldName())) abort($this->status($config['status'] ?? null));
 
         return $next($request);
+    }
+
+    /**
+     * Fall back to 403 when the configured status is not a valid HTTP error code,
+     * because abort() would otherwise throw while handling a bot request.
+     */
+    private function status(mixed $status): int
+    {
+        return is_int($status) && $status >= 400 && $status <= 599 ? $status : self::DEFAULT_STATUS;
     }
 
 
