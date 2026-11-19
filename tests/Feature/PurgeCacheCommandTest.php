@@ -84,7 +84,7 @@ final class PurgeCacheCommandTest extends TestCase
     public function test_dry_run_deletes_nothing_and_needs_no_confirmation(): void
     {
         $this->seedDatabase();
-        $this->app['env'] = 'production';
+        $this->app->detectEnvironment(fn () => 'production');
 
         $this->artisan('cache:purge', ['--dry-run' => true, '--skip-files' => true])->assertSuccessful();
 
@@ -95,7 +95,7 @@ final class PurgeCacheCommandTest extends TestCase
     public function test_production_requires_force(): void
     {
         $this->seedDatabase();
-        $this->app['env'] = 'production';
+        $this->app->detectEnvironment(fn () => 'production');
 
         // Prompts fall back to the console question helper in tests, so the question must be declared.
         $this->artisan('cache:purge', ['--skip-files' => true, '--skip-tokens' => true])

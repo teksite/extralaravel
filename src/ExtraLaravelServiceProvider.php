@@ -59,26 +59,17 @@ class ExtraLaravelServiceProvider extends ServiceProvider
 
     private function bootPublishingFiles(): void
     {
-        if (!$this->app->runningInConsole()) {
-            return;
-        }
+        if (!$this->app->runningInConsole()) return;
 
-        $this->publishes([
-            __DIR__.'/config/extralaravel.php' => config_path('extralaravel.php'),
-        ], ['extralaravel', 'extralaravel-config']);
+        $this->publishes([__DIR__.'/config/extralaravel.php' => config_path('extralaravel.php'),], ['extralaravel', 'extralaravel-config']);
 
-        $this->publishes([
-            __DIR__.'/stubs' => base_path('stubs/extralaravel'),
-        ], ['extralaravel', 'extralaravel-stubs']);
+        $this->publishes([__DIR__.'/stubs' => base_path('stubs/extralaravel'),], ['extralaravel', 'extralaravel-stubs']);
     }
 
 
     private function bootCommands(): void
     {
-        // Artisan commands are only needed on the command line; skipping them keeps HTTP requests lighter.
-        if (!$this->app->runningInConsole()) {
-            return;
-        }
+        if (!$this->app->runningInConsole())  return;
 
         $this->commands([
             ApiRequestMakeCommand::class,
