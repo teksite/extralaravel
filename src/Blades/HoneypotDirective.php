@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Teksite\Extralaravel\Blades;
 
 use Illuminate\View\Compilers\BladeCompiler;
