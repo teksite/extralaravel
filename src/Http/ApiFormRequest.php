@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\Response;
 class ApiFormRequest extends FormRequest
 {
 
-    public function failedValidation(Validator $validator)
+    public function failedValidation(Validator $validator): never
     {
         throw new HttpResponseException(response()->json([
             'message' => 'Validation failed.',
@@ -25,9 +25,9 @@ class ApiFormRequest extends FormRequest
     {
         throw new HttpResponseException(response()->json([
             'message' => 'Forbidden.',
-            'errors' => ['auth'=>"Forbidden. You don't have permission"],
-            'status' => 403,
-            'data' => [],
-        ])->setStatusCode(403));
+            'errors'  => ['auth' => "Forbidden. You don't have permission"],
+            'status'  => Response::HTTP_FORBIDDEN,
+            'data'    => [],
+        ], Response::HTTP_FORBIDDEN));
     }
 }

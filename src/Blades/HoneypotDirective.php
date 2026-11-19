@@ -13,6 +13,4 @@ final class HoneypotDirective
     {
         $blade->directive('honeypot', static fn(): string => '<?php echo \\Teksite\\Extralaravel\\Support\\Honeypot::field(); ?>');
     }
-
-    private function __construct() {}
 }

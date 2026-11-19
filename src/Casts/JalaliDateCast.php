@@ -49,7 +49,7 @@ class JalaliDateCast implements CastsAttributes
 
     private function usesJalali(): bool
     {
-        if (!$this->isJalaliPackageInstalled()) if (!$this->isJalaliPackageInstalled()) {
+        if (!$this->isJalaliPackageInstalled()) {
             throw new RuntimeException('The morilog/jalali package is required. Install it using: composer require morilog/jalali');
             return false;
         }

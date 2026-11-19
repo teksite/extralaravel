@@ -3,13 +3,10 @@
 namespace Teksite\Extralaravel\Console;
 
 use Illuminate\Console\GeneratorCommand;
-use Illuminate\Support\Str;
-use Symfony\Component\Console\Input\InputOption;
 use Teksite\Extralaravel\Console\Concerns\ResolvesStubs;
 
 class ServiceMakeCommand extends GeneratorCommand
 {
-
     use ResolvesStubs;
 
     protected $name = 'make:service';
@@ -27,9 +24,5 @@ class ServiceMakeCommand extends GeneratorCommand
     {
         return $rootNamespace . '\\Services';
     }
-
-    /**
-     * @return array<int, array<int, mixed>>
-     */
 
 }

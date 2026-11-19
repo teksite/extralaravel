@@ -44,11 +44,7 @@ class PurgeCacheCommand extends Command
     {
         $dryRun = (bool) $this->option('dry-run');
 
-        if (!$this->confirmProductionExecution()) return self::FAILURE;
-
-        // A dry run deletes nothing, so it never needs the production confirmation.
         if (!$dryRun && !$this->confirmToProceed()) return self::FAILURE;
-
 
         $start = microtime(true);
 
@@ -308,15 +304,5 @@ class PurgeCacheCommand extends Command
         );
     }
 
-    /**
-     * Ask for confirmation before destructive production operations.
-     */
-    private function confirmProductionExecution(): bool
-    {
-        if (app()->environment('production') && !$this->option('force')) {
-            return $this->confirm('⚠️ Application is running in production. Continue?');
-        }
-        return true;
-    }
 
 }

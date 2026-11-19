@@ -4,7 +4,6 @@ namespace Teksite\Extralaravel\Traits;
 
 use Closure;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -13,8 +12,6 @@ use LogicException;
 trait TrashMethods
 {
 
-    const int LIMIT_MAX_PER_PAGE = 250;
-
     /**
      * Get the model class used by this trash manager.
      *
@@ -22,15 +19,28 @@ trait TrashMethods
      */
     abstract protected function getModelClass(): string;
 
+    /**
+     * Number of keys sent to the database in one query.
+     *
+     * Large IN (...) lists exceed the bound-parameter limits of several drivers, so keys are chunked.
+     */
     protected function trashChunkSize(): int
     {
         return 1000;
     }
 
     /**
+     * Largest page size getTrashes() will honor, so a client-supplied value cannot request the whole table.
+     */
+    protected function trashMaxPerPage(): int
+    {
+        return 250;
+    }
+
+    /**
      * Get a query builder containing only soft-deleted models.
      */
-    private function trashedQuery(): Builder
+    protected function trashedQuery(): Builder
     {
         $modelClass = $this->getModelClass();
 
@@ -56,24 +66,13 @@ trait TrashMethods
 
 
     /**
-     * Get the model's primary key name.
-     *
-     * This supports models whose primary key is not "id".
-     */
-    private function getModelKeyName(): string
-    {
-        return $this->trashedQuery()->getModel()->getKeyName();
-    }
-
-
-    /**
      * Get paginated soft-deleted records.
      *
      * Validate any client-supplied $perPage value before passing it in.
      */
-    public function getTrashes(?int $perPage = 25, array|string $columns = ['*'], string $pageName = 'page', ?int $page = null, \Closure|int|null $total = null): LengthAwarePaginator
+    public function getTrashes(?int $perPage = 25, array|string $columns = ['*'], string $pageName = 'page', ?int $page = null, Closure|int|null $total = null): LengthAwarePaginator
     {
-        $perPage = max(1, min($perPage ?? 25, self::LIMIT_MAX_PER_PAGE));
+        $perPage = max(1, min($perPage ?? 25, $this->trashMaxPerPage()));
 
         return $this->trashedQuery()->paginate($perPage, $columns, $pageName, $page, $total);
     }

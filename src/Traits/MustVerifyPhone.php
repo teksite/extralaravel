@@ -5,7 +5,7 @@ namespace Teksite\Extralaravel\Traits;
 trait MustVerifyPhone
 {
     /**
-     * Determine if the user has verified their phone address.
+     * Determine if the user has verified their phone number.
      *
      * @return bool
      */
@@ -47,13 +47,13 @@ trait MustVerifyPhone
 
 
     /**
-     * Get the phone address that should be used for verification.
+     * Get the phone number that should be used for verification.
      *
      * @return string
      */
     public function getPhoneForVerification(): string
     {
-        return $this->phone;
+        return (string) $this->phone;
     }
 
 }

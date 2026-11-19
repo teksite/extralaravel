@@ -9,7 +9,7 @@ final class TrashResourceDefinition
      *
      * "binding" marks actions that address one trashed record through the {resource} wildcard.
      */
-    private const array ACTIONS = [
+    private const ACTIONS = [
         'index'     => [
             'method'  => 'GET',
             'uri'     => 'trash',

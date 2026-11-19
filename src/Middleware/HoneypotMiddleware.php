@@ -4,6 +4,7 @@ namespace Teksite\Extralaravel\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Teksite\Extralaravel\Support\Honeypot;
 
 class HoneypotMiddleware
@@ -11,7 +12,7 @@ class HoneypotMiddleware
 
     private const int DEFAULT_STATUS = 403;
 
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
         $config = (array)config('extralaravel.honeypot', []);
 
@@ -30,6 +31,4 @@ class HoneypotMiddleware
     {
         return is_int($status) && $status >= 400 && $status <= 599 ? $status : self::DEFAULT_STATUS;
     }
-
-
 }

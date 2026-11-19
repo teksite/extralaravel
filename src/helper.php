@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\MessageBag;
-use Illuminate\Support\Str;
+use Illuminate\Support\Stringable;
 use Teksite\Extralaravel\Support\ArrayExporter;
 use Teksite\Extralaravel\Support\Digits;
 use Teksite\Extralaravel\Support\PersianText;

@@ -3,7 +3,6 @@
 namespace Teksite\Extralaravel\Enums;
 
 use Generator;
-use Illuminate\Support\Str;
 use Teksite\Extralaravel\Support\Digits;
 
 enum MobilePatterns
@@ -102,15 +101,15 @@ enum MobilePatterns
      * Longest normalized input worth running a regular expression on: "+" + 15 digits (E.164) + room for a
      * two-digit trunk prefix. Anything longer cannot be a valid number, so it is rejected before PCRE runs.
      */
-    private const int MAX_LENGTH = 20;
+    private const MAX_LENGTH = 20;
 
 
     /**
      * Code point of the regional indicator symbol letter "A"; two of them in a row render as a flag emoji.
      */
-    private const int REGIONAL_INDICATOR_A = 0x1F1E6;
+    private const REGIONAL_INDICATOR_A = 0x1F1E6;
 
-    private const array DATA = [
+    private const DATA = [
         'IRAN'           => ['iso' => 'IR', 'code' => '98', 'trunk' => '0', 'label' => 'Iran', 'example' => '9123456789', 'pattern' => '/^(\+98|0098|0)?9\d{9}$/'],
         'USA'            => ['iso' => 'US', 'code' => '1', 'trunk' => '', 'label' => 'United States', 'example' => '2015550123', 'pattern' => '/^(\+1)?[2-9]\d{9}$/'],
         'CANADA'         => ['iso' => 'CA', 'code' => '1', 'trunk' => '', 'label' => 'Canada', 'example' => '5062345678', 'pattern' => '/^(\+1)?[2-9]\d{9}$/'],
@@ -279,8 +278,7 @@ enum MobilePatterns
      */
     public function matches(string $normalizedPhone): bool
     {
-        return strlen($normalizedPhone) <= self::MAX_LENGTH
-            && preg_match($this->pattern(), $normalizedPhone) === 1;
+        return strlen($normalizedPhone) <= self::MAX_LENGTH && preg_match($this->pattern(), $normalizedPhone) === 1;
     }
 
     /**
@@ -291,12 +289,10 @@ enum MobilePatterns
     {
         $phone = self::normalize($phone);
 
-        if (!$this->matches($phone))  return null;
+        if (!$this->matches($phone)) return null;
 
 
-        if (str_starts_with($phone, '+')) {
-            return substr($phone, strlen($this->code()) + 1);
-        }
+        if (str_starts_with($phone, '+')) return substr($phone, strlen($this->code()) + 1);
 
         return $this->withoutTrunkPrefix($phone);
     }
@@ -366,9 +362,7 @@ enum MobilePatterns
         }
 
         foreach (self::cases() as $case) {
-            if ($case->iso() === $iso) {
-                return $case;
-            }
+            if ($case->iso() === $iso) return $case;
         }
 
         return null;
@@ -389,9 +383,8 @@ enum MobilePatterns
             $digits = substr($digits, 2);
         }
 
-        if ($digits === '') {
-            return [];
-        }
+        if ($digits === '') return [];
+
 
         return array_values(array_filter(
             self::cases(),
@@ -482,9 +475,7 @@ enum MobilePatterns
 
         $country = is_string($country) ? self::country($country) : $country;
 
-        if ($country === null || !$country->matches($phone)) {
-            return null;
-        }
+        if ($country === null || !$country->matches($phone)) return null;
 
         return $country->code().$country->withoutTrunkPrefix($phone);
     }
@@ -524,8 +515,7 @@ enum MobilePatterns
             $options[$case->iso()] = $case->label();
         }
 
-        if ($sortByLabel)  asort($options);
-
+        if ($sortByLabel) asort($options);
 
         return $options;
     }
@@ -564,13 +554,10 @@ enum MobilePatterns
         $international = str_starts_with($normalizedPhone, '+');
 
         foreach (self::cases() as $case) {
-            if ($international && !str_starts_with($normalizedPhone, '+'.$case->code())) {
-                continue;
-            }
+            if ($international && !str_starts_with($normalizedPhone, '+'.$case->code())) continue;
 
-            if ($case->matches($normalizedPhone)) {
-                yield $case;
-            }
+            if ($case->matches($normalizedPhone)) yield $case;
+
         }
     }
 

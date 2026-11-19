@@ -55,14 +55,15 @@ class ExtraLaravelServiceProvider extends ServiceProvider
         $this->registerMiddlewareAliases();
         $this->bootPublishingFiles();
         $this->bootCommands();
-
     }
 
     private function bootPublishingFiles(): void
     {
-        if (!$this->app->runningInConsole()) return;
+        if (!$this->app->runningInConsole()) {
+            return;
+        }
 
-            $this->publishes([
+        $this->publishes([
             __DIR__.'/config/extralaravel.php' => config_path('extralaravel.php'),
         ], ['extralaravel', 'extralaravel-config']);
 
@@ -74,20 +75,18 @@ class ExtraLaravelServiceProvider extends ServiceProvider
 
     private function bootCommands(): void
     {
-        $command = [PurgeCacheCommand::class,];
-
-        if ($this->app->runningInConsole()) {
-            $command = array_merge(
-                $command,
-                [
-                    ApiRequestMakeCommand::class,
-                    SoftDeleteControllerMakeCommand::class,
-                    LogicMakeCommand::class,
-                    ServiceMakeCommand::class,
-
-                ]);
+        // Artisan commands are only needed on the command line; skipping them keeps HTTP requests lighter.
+        if (!$this->app->runningInConsole()) {
+            return;
         }
-        $this->commands($command);
+
+        $this->commands([
+            ApiRequestMakeCommand::class,
+            SoftDeleteControllerMakeCommand::class,
+            LogicMakeCommand::class,
+            ServiceMakeCommand::class,
+            PurgeCacheCommand::class,
+        ]);
     }
 
 

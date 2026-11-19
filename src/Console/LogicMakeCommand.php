@@ -3,8 +3,6 @@
 namespace Teksite\Extralaravel\Console;
 
 use Illuminate\Console\GeneratorCommand;
-use Illuminate\Support\Str;
-use Symfony\Component\Console\Input\InputOption;
 use Teksite\Extralaravel\Console\Concerns\ResolvesStubs;
 
 class LogicMakeCommand extends GeneratorCommand

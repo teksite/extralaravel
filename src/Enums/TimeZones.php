@@ -411,7 +411,12 @@ enum TimeZones
     case Asia_Kamchatka;
 
 
-    const array TIMES = [
+    /**
+     * Standard (non-DST) UTC offsets by zone name.
+     *
+     * An untyped constant is used on purpose: typed class constants require PHP 8.3.
+     */
+    const TIMES = [
         'Asia/Tehran'               => '+3:30',
         'America/Adak'              => '-10:00',
         'America/Atka'              => '-10:00',
