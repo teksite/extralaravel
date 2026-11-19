@@ -1,108 +1,73 @@
 <?php
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\Str;
+use Teksite\Extralaravel\Support\ArrayExporter;
+use Teksite\Extralaravel\Support\Digits;
+use Teksite\Extralaravel\Support\PersianText;
+use Teksite\Extralaravel\Support\Slug;
+use Teksite\Extralaravel\Support\StaticData;
 
 if (!function_exists('changeToSlug')) {
     /**
-     * convert string to slug
+     * Convert a string to a slug.
      */
-    function changeToSlug(string $slug, string $separator = '-',): \Illuminate\Support\Stringable
+    function changeToSlug(string $slug, string $separator = '-'): Stringable
     {
-        $slug = preg_replace_callback('/[A-Z]/', function ($matches,) {
-            return ' '.strtolower($matches[0]);
-        }, $slug);
-        $slug = preg_replace('/[áàảạãăắằẳẵặâấầẩẫậ]/', 'a', $slug);
-        $slug = preg_replace('/[éèẻẽẹêếềểễệ]/', 'e', $slug);
-        $slug = preg_replace('/[iíìỉĩị]/', 'i', $slug);
-        $slug = preg_replace('/[óòỏõọôốồổỗộơớờởỡợ]/', 'o', $slug);
-        $slug = preg_replace('/[úùủũụưứừửữự]/', 'u', $slug);
-        $slug = preg_replace('/[ýỳỷỹỵ]/', 'y', $slug);
-        $slug = preg_replace('/đ/', 'd', $slug);
-
-        return Str::of($slug)->slug($separator, null);
+        return Slug::make($slug, $separator);
     }
 }
 
 if (!function_exists('toEnglishNumber')) {
     /**
-     * Convert arabic and persian numbers to english numbers
+     * Convert Arabic and Persian digits to English digits.
      */
-    function toEnglishNumber(string $value,): string
+    function toEnglishNumber(string $value): string
     {
-        return strtr($value, [
-            '۰' => '0',
-            '۱' => '1',
-            '۲' => '2',
-            '۳' => '3',
-            '۴' => '4',
-            '۵' => '5',
-            '۶' => '6',
-            '۷' => '7',
-            '۸' => '8',
-            '۹' => '9',
-
-            '٠' => '0',
-            '١' => '1',
-            '٢' => '2',
-            '٣' => '3',
-            '٤' => '4',
-            '٥' => '5',
-            '٦' => '6',
-            '٧' => '7',
-            '٨' => '8',
-            '٩' => '9',
-        ]);
+        return Digits::toEnglish($value);
     }
 }
 
 if (!function_exists('normalizePersianText')) {
     /**
-     * Convert arabic letters to persian
+     * Convert Arabic letter variants to Persian and strip diacritics.
      */
-    function normalizePersianText(?string $string,): null|string
+    function normalizePersianText(?string $string): ?string
     {
-        if ($string === null) return null;
-        $arabic_to_persian_map = [
-            'أ' => 'ا', 'إ' => 'ا', 'آ' => 'آ', 'ا' => 'ا',
-            'ى' => 'ی', 'ي' => 'ی', 'ی' => 'ی',
-            'ة' => 'ه',
-            'ؤ' => 'و', 'ئ' => 'ی', 'ء' => 'ء',
-            'َ' => '', 'ً' => '', 'ُ' => '', 'ٌ' => '', 'ِ' => '', 'ٍ' => '', 'ْ' => '', 'ّ' => '',
-        ];
-        $string = preg_replace('/[\x{064B}-\x{0652}]/u', '', $string);
-        return strtr($string, $arabic_to_persian_map);
+        return $string === null ? null : PersianText::normalize($string);
     }
 }
+
+
 
 if (!function_exists('convertSeconds')) {
     /**
-     * convert second to hour-minute-second
-     * format parameter can be array to return arrays of values carbon format
+     * Convert seconds to "HH:MM:SS", or to an array of hours, minutes and seconds when $format is "array".
+     * Negative values are treated as zero.
+     *
+     * @return string|array{hours: int, minutes: int, seconds: int}
      */
-    function convertSeconds(?int $seconds = null, ?string $format = 'string',): string|array
+    function convertSeconds(?int $seconds = null, ?string $format = 'string'): string|array
     {
-        if ($seconds === null) return "00:00:00";
+        $seconds = max(0, $seconds ?? 0);
 
-        $hours = str_pad((string)floor($seconds / 3600), 2, '0', STR_PAD_LEFT);
-        $minutes = str_pad((string)floor(($seconds % 3600) / 60), 2, '0', STR_PAD_LEFT);
-        $sec = str_pad((string)($seconds % 60), 2, '0', STR_PAD_LEFT);
+        $hours = intdiv($seconds, 3600);
+        $minutes = intdiv($seconds % 3600, 60);
+        $remainder = $seconds % 60;
 
         if ($format === 'array') {
-            return [
-                'hours'   => (int)$hours,
-                'minutes' => (int)$minutes,
-                'seconds' => (int)$sec,
-            ];
+            return ['hours' => $hours, 'minutes' => $minutes, 'seconds' => $remainder];
         }
 
-        return "{$hours}:{$minutes}:{$sec}";
+        return sprintf('%02d:%02d:%02d', $hours, $minutes, $remainder);
     }
 }
 
+
 if (!function_exists('currentUrlWithoutQueries')) {
     /**
-     * return current url without any query
+     * Return the current URL without the query string.
      */
     function currentUrlWithoutQueries(): string
     {
@@ -110,104 +75,110 @@ if (!function_exists('currentUrlWithoutQueries')) {
     }
 }
 
+
 if (!function_exists('exploding')) {
     /**
-     * explode string by "," and "،"
+     * Explode a string by the English "," and the Persian "،" commas, trimming every part.
+     *
+     * @param string|null $string
+     * @return Collection|null
      */
-    function exploding(?string $string,): ?\Illuminate\Support\Collection
+    function exploding(?string $string): ?Collection
     {
         if ($string === null) return null;
-        return collect(explode(',', $string))
-            ->flatMap(fn($item,) => explode('،', trim($item)))
-            ->map(fn($item,) => trim($item));
+
+        return collect(explode(',', str_replace('،', ',', $string)))
+            ->map(static fn (string $item): string => trim($item));
     }
 }
 
 if (!function_exists('var_export_short')) {
     /**
-     * @param      $expression
-     * @param bool $return
-     * @return array|string|string[]|void|null
+     * Export a value as short-array-syntax PHP code.
+     *
+     * Returns the code when $return is true, otherwise prints it.
      */
-    function var_export_short($expression, bool $return = false,)
+    function var_export_short(mixed $expression, bool $return = false): ?string
     {
+        $export = ArrayExporter::export($expression);
 
-        $export = var_export($expression, true);
-        $patterns = [
-            "/array \(/"                       => '[',
-            "/^([ ]*)\)(,?)$/m"                => '$1]$2',
-            "/=>[ ]?\n[ ]+\[/"                 => '=> [',
-            "/([ ]*)(\'[^\']+\') => ([\[\'])/" => '$1$2 => $3',
-        ];
-        $export = preg_replace(array_keys($patterns), array_values($patterns), $export);
+        if ($return) return $export;
 
-        if ((bool)$return) return $export; else echo $export;
+        echo $export;
+
+        return null;
     }
 }
 
 if (!function_exists('arrayToDot')) {
     /**
-     * convert array to dot syntax
+     * Convert array bracket syntax to dot syntax, e.g. "user[address][city]" => "user.address.city".
      */
-    function arrayToDot(string $name,): ?string
+    function arrayToDot(string $name): string
     {
-        $dottedName = str_contains($name, '[')
-            ? preg_replace(['/\[/', '/\]/'], ['.', ''], $name)
-            : $name;
-        return trim($dottedName, '.');
-
+        return trim(strtr($name, ['[' => '.', ']' => '']), '.');
     }
 }
 
 if (!function_exists('dotToArray')) {
     /**
-     * convert dotted string to array bracket syntax (inverse of arrayToDot)
+     * Convert dot syntax to array bracket syntax (inverse of arrayToDot).
      *
      * e.g. "user.address.city" => "user[address][city]"
      */
-    function dotToArray(string $name,): ?string
+    function dotToArray(string $name): string
     {
-        if (!str_contains($name, '.')) return $name;
+        if (!str_contains($name, '.'))  return $name;
 
         $segments = explode('.', $name);
         $first = array_shift($segments);
 
-        return $first.'['.implode('][', $segments).']';
+        return $first . '[' . implode('][', $segments) . ']';
     }
 }
 
 if (!function_exists('normalizePath')) {
     /**
-     * normalize path directory
+     * Normalize directory separators and collapse repeated ones.
+     *
+     * This does not resolve "." or ".." segments, so it must not be used as a path traversal guard.
      */
-    function normalizePath(string $path,): string
+    function normalizePath(string $path): string
     {
-        $normalizedPath = str_replace(['/', '\\', '/\\', '\\/'], DIRECTORY_SEPARATOR, $path);
+        $normalized = preg_replace('~[\\\\/]+~', DIRECTORY_SEPARATOR, $path) ?? $path;
+        $trimmed = rtrim($normalized, DIRECTORY_SEPARATOR);
 
-        return rtrim($normalizedPath, DIRECTORY_SEPARATOR);
+        // A path made only of separators is the filesystem root, not an empty string.
+        return $trimmed === '' && $normalized !== '' ? DIRECTORY_SEPARATOR : $trimmed;
     }
 }
 
 if (!function_exists('is_rtl')) {
     /**
-     * Determines if a given language uses right-to-left (RTL) script.
+     * Determine whether a locale uses a right-to-left script.
+     *
+     * Region and script suffixes are ignored, so "fa", "fa_IR" and "fa-IR" are all RTL.
      */
-    function is_rtl(?string $language = null,): bool
+    function is_rtl(?string $language = null): bool
     {
-        $language ??= app()->getLocale();
+        $language = strtolower(str_replace('-', '_', $language ?? app()->getLocale()));
+        $primary = explode('_', $language, 2)[0];
 
-        return in_array(
-            $language,
-            config('extralaravel.rtl_locales' ,[]),
-            true,
-        );
+        $rtlLocales = array_map('strtolower', (array) config('extralaravel.rtl_locales', []));
 
+        return in_array($language, $rtlLocales, true) || in_array($primary, $rtlLocales, true);
     }
 }
 
-if (!function_exists('get_error')) {
 
-    function get_error(MessageBag $errors, string $name,): array
+
+if (!function_exists('get_error')) {
+    /**
+     * Get validation errors for a field written in array bracket syntax, e.g. "users[0][email]".
+     *
+     * @return array<int, string>
+     */
+    function get_error(MessageBag $errors, string $name): array
     {
         return $errors->get(arrayToDot($name));
     }
@@ -215,119 +186,12 @@ if (!function_exists('get_error')) {
 
 if (!function_exists('getStaticData')) {
     /**
-     * Get static data from PHP files using dot notation.
+     * Read static data from PHP files inside the configured data directory using dot notation.
      *
-     * Example:
-     * getStaticData('app.data.times.iran.tehran');
-     *
-     * @param string $key
-     * @param mixed  $default
-     * @param string $prePath
-     * @return mixed
+     * Example: getStaticData('app.data.times.iran.tehran') with extralaravel.data_path = "app/data".
      */
-    function getStaticData(string $key, mixed $default = null, string $prePath = '',): mixed
+    function getStaticData(string $key, mixed $default = null, string $prePath = ''): mixed
     {
-        $prePath = trim(str_replace(['/', '\\'], '.', $prePath), '.');
-
-        $key = trim($key, '.');
-
-        if ($key === '') return $default;
-
-        $path = $prePath !== '' ? "{$prePath}.{$key}" : $key;
-
-        $segments = explode('.', $path);
-
-        foreach ($segments as $segment) {
-            if ($segment === '' || $segment === '.' || $segment === '..' || str_contains($segment, "\0") || str_contains($segment, '/') || str_contains($segment, '\\')) {
-                return $default;
-            }
-        }
-
-        // Cache resolved files and loaded data during the current request.
-        static $resolvedFiles = [];
-        static $loadedFiles = [];
-
-        /*
-         * Find the PHP file.
-         *
-         * Example:
-         * app.data.times.iran.tehran
-         *
-         * Tries:
-         * app.php
-         * app/data.php
-         * app/data/times.php
-         * ...
-         */
-        if (!isset($resolvedFiles[$path])) {
-            $resolvedFiles[$path] = null;
-
-            $basePath = realpath(base_path());
-
-            if ($basePath === false) return $default;
-
-            $fileSegments = [];
-
-            foreach ($segments as $index => $segment) {
-                $fileSegments[] = $segment;
-
-                $candidate = base_path(implode(DIRECTORY_SEPARATOR, $fileSegments).'.php');
-
-                $realPath = realpath($candidate);
-
-                if ($realPath === false || !is_file($realPath)) {
-                    continue;
-                }
-
-                /*
-                 * Make sure the resolved file is inside the application.
-                 * This also protects against malicious symlinks.
-                 */
-                $base = rtrim(str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $basePath), DIRECTORY_SEPARATOR);
-
-                $file = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $realPath);
-
-                if ($file !== $base && !str_starts_with($file, $base.DIRECTORY_SEPARATOR)) {
-                    return $default;
-                }
-
-                $resolvedFiles[$path] = [$realPath, array_slice($segments, $index + 1),];
-
-                break;
-            }
-        }
-
-        if ($resolvedFiles[$path] === null) {
-            return $default;
-        }
-
-        [$filePath, $arrayKeys] = $resolvedFiles[$path];
-
-        /*
-         * Load each PHP file only once per request.
-         */
-        if (!array_key_exists($filePath, $loadedFiles)) {
-            $data = require $filePath;
-
-            if (!is_array($data)) {
-                return $default;
-            }
-
-            $loadedFiles[$filePath] = $data;
-        }
-
-        $data = $loadedFiles[$filePath];
-
-        /*
-         * Traverse nested array.
-         */
-        foreach ($arrayKeys as $arrayKey) {
-            if (!is_array($data) || !array_key_exists($arrayKey, $data)) {
-                return $default;
-            }
-            $data = $data[$arrayKey];
-        }
-
-        return $data;
+        return app(StaticData::class)->get($key, $default, $prePath);
     }
 }
