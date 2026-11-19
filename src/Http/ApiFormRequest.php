@@ -5,19 +5,19 @@ namespace Teksite\Extralaravel\Http;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Symfony\Component\HttpFoundation\Response;
 
 class ApiFormRequest extends FormRequest
 {
 
     public function failedValidation(Validator $validator)
     {
-        return throw new HttpResponseException(response()->json([
+        throw new HttpResponseException(response()->json([
             'message' => 'Validation failed.',
-            'errors' => $validator->errors(),
-            'status' => 422,
-            'data' => [],
-        ])->setStatusCode(422));
-
+            'errors'  => $validator->errors(),
+            'status'  => Response::HTTP_UNPROCESSABLE_ENTITY,
+            'data'    => [],
+        ], Response::HTTP_UNPROCESSABLE_ENTITY));
     }
 
 
@@ -30,5 +30,4 @@ class ApiFormRequest extends FormRequest
             'data' => [],
         ])->setStatusCode(403));
     }
-
 }
