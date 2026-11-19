@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Teksite\Extralaravel\Console;
 
 use Illuminate\Console\GeneratorCommand;
