@@ -16,10 +16,8 @@ class NoHtmlRule implements ValidationRule
     {
         if (!is_string($value)) return;
 
-        if (strip_tags($value) != $value) {
-            $fail(__('The :attribute field cannot contain HTML tags', ['attribute' => $attribute]));
+        if (strip_tags($value) !== $value) {
+            $fail('The :attribute field cannot contain HTML tags')->translate();
         }
     }
-
-
 }

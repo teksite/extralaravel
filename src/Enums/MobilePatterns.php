@@ -83,13 +83,18 @@ enum MobilePatterns
 
     public static function country(string $country): ?self
     {
+        static $countries = null;
+
+        if ($countries === null) {
+            $countries = [];
+            foreach (self::cases() as $case) {
+                $countries[$case->name] = $case;
+            }
+        }
         $country = strtoupper(str_replace([' ', '-'], '_', trim($country)));
 
-        foreach (self::cases() as $case) {
-            if ($case->name === $country)return $case;
-        }
+        return $countries[$country] ?? null;
 
-        return null;
     }
 
     public static function validateWithCountry(string $phone, string|self $country): bool

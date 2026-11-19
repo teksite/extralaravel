@@ -7,6 +7,16 @@ use Illuminate\Contracts\Validation\ValidationRule;
 
 class PasswordRule implements ValidationRule
 {
+    private readonly int $minLength;
+
+    private readonly int $maxLength;
+
+
+    public function __construct(?int $minLength = null, ?int $maxLength = null)
+    {
+        $this->minLength = max(1, $minLength ?? (int) config('extralaravel.password.min_length', 8));
+        $this->maxLength = max($this->minLength, $maxLength ?? (int) config('extralaravel.password.max_length', 128));
+    }
 
 
     /**
@@ -17,29 +27,36 @@ class PasswordRule implements ValidationRule
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         if (!is_string($value)) {
-            $fail(__('validation.string', ['attribute' => $attribute]));
+            $fail('validation.string')->translate();
             return;
         }
 
-        $message = [];
+        $length = mb_strlen($value);
 
-        if (strlen($value) < 6) {
-            $message[] = __("the password should at least 6 characters");
-        }
-        if (!preg_match('/(?=.*?[a-z])/', $value)) {
-            $message[] = __("the password should contain at least one lowercase character");
-        }
-        if (!preg_match('/(?=.*?[A-Z])/', $value)) {
-            $message[] = __("the password should contain at least one uppercase character");
-        }
-        if (!preg_match('/(?=.*?[0-9])/', $value)) {
-            $message[] = __("the password should contain at least one number");
-        }
-        if (!preg_match('/(?=.*?[#?!@$ %^&*-])/', $value)) {
-            $message[] = __("the password should contain at least one special characters (#?!@$ %^&*-)");
+        if ($length > $this->maxLength) {
+            $fail('The :attribute must not be greater than :max characters.')->translate(['max' => $this->maxLength]);
+            return;
         }
 
-        if (count($message) > 0) $fail(implode(", \n", $message));
+        if ($length < $this->minLength) {
+            $fail('The :attribute must be at least :min characters.')->translate(['min' => $this->minLength]);
+        }
+
+        if (preg_match('/[a-z]/', $value) !== 1) {
+            $fail('The :attribute must contain at least one lowercase letter.')->translate();
+        }
+
+        if (preg_match('/[A-Z]/', $value) !== 1) {
+            $fail('The :attribute must contain at least one uppercase letter.')->translate();
+        }
+
+        if (preg_match('/[0-9]/', $value) !== 1) {
+            $fail('The :attribute must contain at least one number.')->translate();
+        }
+
+        if (preg_match('/[^\p{L}\p{N}]/u', $value) !== 1) {
+            $fail('The :attribute must contain at least one symbol.')->translate();
+        }
 
     }
 
